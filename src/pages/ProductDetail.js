@@ -1,8 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import apiService from '../services/apiService';
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -11,645 +16,476 @@ const ProductDetail = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isDesktop = windowWidth >= 1024;
-  const isTablet = windowWidth >= 768 && windowWidth < 1024;
-  const isMobile = windowWidth < 768;
+  useEffect(() => {
+    fetchProductDetail();
+  }, [id]);
 
-  // Mock data based on the screenshot
-  const product = {
-    id: 7,
-    name: "Majapahit Terracotta Sculpture",
-    price: "$85",
-    location: "Mojokerto, East Java",
-    rating: "5.0",
-    reviews: "67 reviews",
-    badge: "Handcrafted",
-    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "This authentic terracotta sculpture is inspired by the ancient Majapahit kingdom art, handcrafted using traditional techniques passed down through generations. Each piece represents the rich cultural heritage of East Java and showcases the intricate artistry of Indonesian craftsmen.",
-    detailedDescription: "The sculpture features detailed motifs and patterns characteristic of Majapahit era artwork, making it a perfect addition to any collection or as a meaningful cultural gift.",
-    artisan: {
-      name: "Pak Slamet Wijaya",
-      title: "Master Ceramicist",
-      experience: "With over 30 years of experience in traditional ceramics, Pak Slamet has dedicated his life to preserving the ancient art of Majapahit-inspired terracotta sculpture. His workshop in Mojokerto continues the legacy of his ancestors.",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
-    },
-    location_details: {
-      name: "Mojokerto Ceramics Village",
-      description: "Traditional pottery village in Mojokerto Regency, East Java Province",
-      distance: "45 min from Surabaya",
-      distance_km: "2.3 km from center"
+  const fetchProductDetail = async () => {
+    try {
+      setLoading(true);
+      const data = await apiService.getDataById(id);
+      if (data) {
+        setProduct(data);
+        setError(null);
+      } else {
+        setError('Produk tidak ditemukan');
+      }
+    } catch (err) {
+      setError('Gagal memuat detail produk. Silakan coba lagi.');
+      console.error('Error fetching product detail:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const formatPrice = (price) => {
+    if (typeof price === 'number') {
+      return `Rp ${price.toLocaleString('id-ID')}`;
+    }
+    return price || 'Hubungi Penjual';
+  };
+
+  const handleContact = (contact) => {
+    if (contact) {
+      // Format nomor telepon untuk WhatsApp
+      const phoneNumber = contact.replace(/\D/g, '');
+      const whatsappUrl = `https://wa.me/62${phoneNumber.startsWith('0') ? phoneNumber.slice(1) : phoneNumber}`;
+      window.open(whatsappUrl, '_blank');
+    }
+  };
+
+  // Responsive breakpoints
+  const isXLDesktop = windowWidth >= 1440;
+  const isLargeDesktop = windowWidth >= 1200;
+  const isDesktop = windowWidth >= 1024;
+  const isTablet = windowWidth >= 768;
+  const isLargeMobile = windowWidth >= 480;
+  const isMobile = windowWidth < 768;
+  const isSmallMobile = windowWidth < 480;
+
+  // Dynamic spacing
+  const getSpacing = (xl, lg, md, sm, xs) => {
+    if (isXLDesktop) return xl;
+    if (isLargeDesktop) return lg;
+    if (isDesktop) return md;
+    if (isTablet) return sm;
+    return xs;
+  };
+
+  // Dynamic font sizes
+  const getFontSize = (xl, lg, md, sm, xs) => {
+    if (isXLDesktop) return xl;
+    if (isLargeDesktop) return lg;
+    if (isDesktop) return md;
+    if (isTablet) return sm;
+    return xs;
+  };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: '#f5f5f5',
+        paddingTop: '60px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          fontSize: getFontSize('18px', '16px', '16px', '14px', '13px'),
+          color: '#666'
+        }}>
+          <div 
+            className="loading-spinner"
+            style={{
+              width: getFontSize('28px', '24px', '20px', '18px', '16px'),
+              height: getFontSize('28px', '24px', '20px', '18px', '16px'),
+              border: '3px solid #4CAF50',
+              borderTop: '3px solid transparent',
+              borderRadius: '50%'
+            }}
+          ></div>
+          Memuat detail produk...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: '#f5f5f5',
+        paddingTop: '60px',
+        padding: getSpacing('40px', '32px', '24px', '20px', '16px')
+      }}>
+        <div style={{
+          background: 'white',
+          padding: getSpacing('48px', '40px', '32px', '28px', '24px'),
+          borderRadius: getFontSize('20px', '18px', '16px', '14px', '12px'),
+          textAlign: 'center',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          maxWidth: getSpacing('500px', '450px', '400px', '350px', '300px'),
+          width: '100%'
+        }}>
+          <div style={{ fontSize: getFontSize('64px', '56px', '48px', '40px', '32px'), marginBottom: '20px' }}>😞</div>
+          <h3 style={{ 
+            marginBottom: '16px', 
+            color: '#333',
+            fontSize: getFontSize('24px', '22px', '20px', '18px', '16px'),
+            fontWeight: '600'
+          }}>Oops!</h3>
+          <p style={{ 
+            color: '#666', 
+            marginBottom: '28px',
+            fontSize: getFontSize('16px', '15px', '14px', '13px', '12px'),
+            lineHeight: '1.5'
+          }}>{error}</p>
+          <button 
+            onClick={() => navigate('/souvenirs')}
+            style={{
+              background: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              padding: getFontSize('16px 32px', '14px 28px', '12px 24px', '10px 20px', '8px 16px'),
+              borderRadius: getFontSize('12px', '10px', '8px', '6px', '4px'),
+              cursor: 'pointer',
+              fontSize: getFontSize('16px', '15px', '14px', '13px', '12px'),
+              fontWeight: '600',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              if (!isMobile) {
+                e.target.style.background = '#45A049';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 16px rgba(76, 175, 80, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isMobile) {
+                e.target.style.background = '#4CAF50';
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.3)';
+              }
+            }}
+          >
+            Kembali ke Daftar Produk
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: '#f5f5f5', 
+    <div style={{
+      minHeight: '100vh',
+      background: '#f5f5f5',
       paddingTop: '60px',
-      paddingBottom: isDesktop ? '50px' : '100px',
+      paddingBottom: isMobile ? '100px' : '40px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
-      
       {/* Header */}
       <div style={{
         background: 'white',
-        padding: isDesktop ? '20px 48px' : isTablet ? '16px 32px' : '16px',
+        padding: getSpacing('24px 64px', '20px 48px', '18px 32px', '16px 24px', '14px 16px'),
         borderBottom: '1px solid #e0e0e0',
         display: 'flex',
         alignItems: 'center',
-        gap: '16px',
-        position: 'fixed',
-        top: '60px',
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        maxWidth: isDesktop ? '1200px' : '100%',
-        margin: '0 auto'
+        gap: getSpacing('20px', '18px', '16px', '14px', '12px'),
+        maxWidth: isXLDesktop ? '1400px' : isLargeDesktop ? '1200px' : '100%',
+        margin: '0 auto',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
       }}>
         <button 
-          onClick={() => window.history.back()}
+          onClick={() => navigate('/souvenirs')}
           style={{
             background: 'none',
             border: 'none',
-            fontSize: '18px',
+            fontSize: getFontSize('22px', '20px', '18px', '16px', '14px'),
             cursor: 'pointer',
-            padding: '8px'
+            padding: getSpacing('12px', '10px', '8px', '6px', '4px'),
+            borderRadius: '8px',
+            transition: 'background 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            if (!isMobile) {
+              e.target.style.background = '#f5f5f5';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isMobile) {
+              e.target.style.background = 'none';
+            }
           }}
         >
           ←
         </button>
         <h1 style={{
-          fontSize: isDesktop ? '20px' : '16px',
-          fontWeight: '600',
+          fontSize: getFontSize('32px', '28px', '24px', '20px', '18px'),
+          fontWeight: '700',
           color: '#333',
           margin: 0,
           flex: 1
         }}>
-          {isDesktop ? product.name : 'Product Details'}
+          Detail Produk
         </h1>
-        <button style={{
-          background: 'none',
-          border: 'none',
-          fontSize: '18px',
-          cursor: 'pointer',
-          padding: '8px'
-        }}>
-          📤
-        </button>
       </div>
 
-      {/* Main Content Container */}
+      {/* Main Content */}
       <div style={{
-        maxWidth: isDesktop ? '1200px' : '100%',
+        maxWidth: isXLDesktop ? '1400px' : isLargeDesktop ? '1200px' : '100%',
         margin: '0 auto',
-        paddingTop: '80px'
+        padding: getSpacing('40px 64px', '32px 48px', '28px 32px', '24px 24px', '20px 16px')
       }}>
-
-        {/* Desktop Layout */}
-        {isDesktop ? (
+        <div style={{
+          background: 'white',
+          borderRadius: getFontSize('24px', '20px', '16px', '14px', '12px'),
+          overflow: 'hidden',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+          display: isDesktop ? 'flex' : 'block'
+        }}>
+          {/* Product Image */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '48px',
-            padding: '32px 48px'
+            width: isDesktop ? '50%' : '100%',
+            height: getSpacing('600px', '550px', '500px', '350px', '280px'),
+            position: 'relative'
           }}>
-            {/* Left Column - Image and Gallery */}
-            <div>
-              <div style={{ position: 'relative', marginBottom: '24px' }}>
-                {product.badge && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '20px',
-                    left: '20px',
-                    background: '#FF9800',
-                    color: 'white',
-                    padding: '8px 16px',
-                    borderRadius: '16px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    zIndex: 1
-                  }}>
-                    {product.badge}
-                  </div>
-                )}
-                <img 
-                  src={product.image}
-                  alt={product.name}
-                  style={{
-                    width: '100%',
-                    height: '400px',
-                    objectFit: 'cover',
-                    borderRadius: '16px'
-                  }}
-                />
+            <img 
+              src={product.imageUrl || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+              alt={product.name}
+              onError={(e) => {
+                e.target.src = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+              }}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+            />
+            {product.category && (
+              <div style={{
+                position: 'absolute',
+                top: getSpacing('24px', '20px', '16px', '14px', '12px'),
+                left: getSpacing('24px', '20px', '16px', '14px', '12px'),
+                background: '#4CAF50',
+                color: 'white',
+                padding: getSpacing('12px 24px', '10px 20px', '8px 16px', '6px 12px', '4px 8px'),
+                borderRadius: getFontSize('20px', '16px', '12px', '10px', '8px'),
+                fontSize: getFontSize('14px', '13px', '12px', '11px', '10px'),
+                fontWeight: '600',
+                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+              }}>
+                {product.category}
               </div>
+            )}
+          </div>
+
+          {/* Product Info */}
+          <div style={{
+            width: isDesktop ? '50%' : '100%',
+            padding: getSpacing('48px', '40px', '32px', '28px', '24px')
+          }}>
+            <h1 style={{
+              fontSize: getFontSize('40px', '36px', '32px', '28px', '24px'),
+              fontWeight: '700',
+              color: '#333',
+              margin: '0 0 20px 0',
+              lineHeight: '1.2'
+            }}>
+              {product.name}
+            </h1>
+
+            {product.product && (
+              <p style={{
+                fontSize: getFontSize('20px', '18px', '16px', '15px', '14px'),
+                color: '#666',
+                margin: '0 0 24px 0',
+                lineHeight: '1.5',
+                fontWeight: '400'
+              }}>
+                {product.product}
+              </p>
+            )}
+
+            <div style={{
+              fontSize: getFontSize('36px', '32px', '28px', '24px', '20px'),
+              fontWeight: '700',
+              color: '#4CAF50',
+              margin: '0 0 32px 0'
+            }}>
+              {formatPrice(product.price)}
             </div>
 
-            {/* Right Column - Product Info */}
-            <div>
-              <div style={{ background: 'white', padding: '32px', borderRadius: '16px', marginBottom: '24px' }}>
-                <h1 style={{
-                  fontSize: '32px',
+            {product.description && (
+              <div style={{ marginBottom: getSpacing('32px', '28px', '24px', '20px', '16px') }}>
+                <h3 style={{
+                  fontSize: getFontSize('24px', '22px', '20px', '18px', '16px'),
                   fontWeight: '600',
                   color: '#333',
                   margin: '0 0 16px 0'
                 }}>
-                  {product.name}
-                </h1>
-                
-                <div style={{
-                  fontSize: '36px',
-                  fontWeight: 'bold',
-                  color: '#4CAF50',
-                  marginBottom: '16px'
-                }}>
-                  {product.price}
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '16px'
-                }}>
-                  <span style={{ color: '#FF9800' }}>📍</span>
-                  <span style={{ color: '#666', fontSize: '16px' }}>{product.location}</span>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '24px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {[1,2,3,4,5].map(star => (
-                      <span key={star} style={{ color: '#FFD700', fontSize: '18px' }}>⭐</span>
-                    ))}
-                  </div>
-                  <span style={{ color: '#333', fontWeight: '600', fontSize: '16px' }}>
-                    {product.rating}
-                  </span>
-                  <span style={{ color: '#666', fontSize: '16px' }}>
-                    ({product.reviews})
-                  </span>
-                </div>
-
-                <button style={{
-                  background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '16px 32px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  width: '100%',
-                  marginBottom: '16px'
-                }}>
-                  Add to Cart
-                </button>
-
-                <button style={{
-                  background: 'transparent',
-                  color: '#4CAF50',
-                  border: '2px solid #4CAF50',
-                  borderRadius: '12px',
-                  padding: '16px 32px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  width: '100%'
-                }}>
-                  Contact Seller
-                </button>
-              </div>
-
-              {/* Description */}
-              <div style={{ background: 'white', padding: '32px', borderRadius: '16px', marginBottom: '24px' }}>
-                <h3 style={{
-                  fontSize: '20px',
-                  fontWeight: '600',
-                  color: '#333',
-                  marginBottom: '16px'
-                }}>
-                  Description
+                  Deskripsi Produk
                 </h3>
                 <p style={{
+                  fontSize: getFontSize('18px', '16px', '15px', '14px', '13px'),
                   color: '#666',
                   lineHeight: '1.6',
-                  fontSize: '16px',
-                  marginBottom: '16px'
+                  margin: 0
                 }}>
                   {product.description}
                 </p>
-                <p style={{
-                  color: '#666',
-                  lineHeight: '1.6',
-                  fontSize: '16px'
-                }}>
-                  {product.detailedDescription}
-                </p>
               </div>
-            </div>
-          </div>
-        ) : (
-          /* Mobile Layout */
-          <div>
-            {/* Product Image */}
-            <div style={{ position: 'relative', marginBottom: '20px' }}>
-              {product.badge && (
-                <div style={{
-                  position: 'absolute',
-                  top: '20px',
-                  left: '20px',
-                  background: '#FF9800',
+            )}
+
+            {/* Location Info */}
+            {product.location && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: getSpacing('24px', '20px', '16px', '14px', '12px'),
+                padding: getSpacing('20px', '18px', '16px', '14px', '12px'),
+                background: '#f8f8f8',
+                borderRadius: getFontSize('16px', '14px', '12px', '10px', '8px')
+              }}>
+                <span style={{ fontSize: getFontSize('24px', '20px', '18px', '16px', '14px') }}>📍</span>
+                <div>
+                  <div style={{
+                    fontSize: getFontSize('18px', '16px', '15px', '14px', '13px'),
+                    fontWeight: '600',
+                    color: '#333',
+                    marginBottom: '4px'
+                  }}>
+                    Lokasi
+                  </div>
+                  <div style={{
+                    fontSize: getFontSize('16px', '15px', '14px', '13px', '12px'),
+                    color: '#666'
+                  }}>
+                    {product.location}
+                  </div>
+                  {product.address && (
+                    <div style={{
+                      fontSize: getFontSize('14px', '13px', '12px', '11px', '10px'),
+                      color: '#999',
+                      marginTop: '4px'
+                    }}>
+                      {product.address}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Contact Button */}
+            {product.contact && (
+              <button
+                onClick={() => handleContact(product.contact)}
+                style={{
+                  background: '#25D366',
                   color: 'white',
-                  padding: '6px 12px',
-                  borderRadius: '16px',
-                  fontSize: '12px',
+                  border: 'none',
+                  borderRadius: getFontSize('16px', '14px', '12px', '10px', '8px'),
+                  padding: getFontSize('20px 40px', '18px 36px', '16px 32px', '14px 28px', '12px 24px'),
+                  fontSize: getFontSize('18px', '16px', '15px', '14px', '13px'),
                   fontWeight: '600',
-                  zIndex: 1
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  width: '100%',
+                  justifyContent: 'center',
+                  transition: 'all 0.3s ease',
+                  marginBottom: getSpacing('24px', '20px', '16px', '14px', '12px'),
+                  boxShadow: '0 4px 16px rgba(37, 211, 102, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isMobile) {
+                    e.target.style.background = '#1DA851';
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(37, 211, 102, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isMobile) {
+                    e.target.style.background = '#25D366';
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 4px 16px rgba(37, 211, 102, 0.3)';
+                  }
+                }}
+              >
+                <span style={{ fontSize: getFontSize('20px', '18px', '16px', '14px', '12px') }}>💬</span>
+                Hubungi via WhatsApp
+              </button>
+            )}
+
+            {/* Additional Info */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isDesktop ? 'repeat(2, 1fr)' : '1fr',
+              gap: getSpacing('16px', '14px', '12px', '10px', '8px'),
+              marginTop: getSpacing('32px', '28px', '24px', '20px', '16px')
+            }}>
+              {product.rating !== undefined && (
+                <div style={{
+                  padding: getSpacing('20px', '18px', '16px', '14px', '12px'),
+                  background: '#f8f8f8',
+                  borderRadius: getFontSize('12px', '10px', '8px', '6px', '4px'),
+                  textAlign: 'center'
                 }}>
-                  {product.badge}
+                  <div style={{
+                    fontSize: getFontSize('14px', '13px', '12px', '11px', '10px'),
+                    color: '#666',
+                    marginBottom: '8px',
+                    fontWeight: '500'
+                  }}>
+                    Rating
+                  </div>
+                  <div style={{
+                    fontSize: getFontSize('20px', '18px', '16px', '15px', '14px'),
+                    fontWeight: '600',
+                    color: '#333'
+                  }}>
+                    ⭐ {product.rating || 'Belum ada rating'}
+                  </div>
                 </div>
               )}
-              <img 
-                src={product.image}
-                alt={product.name}
-                style={{
-                  width: '100%',
-                  height: '300px',
-                  objectFit: 'cover'
-                }}
-              />
-            </div>
-
-            {/* Product Info */}
-            <div style={{ 
-              background: 'white', 
-              padding: isTablet ? '24px' : '20px', 
-              marginBottom: '16px'
-            }}>
-              <h1 style={{
-                fontSize: isTablet ? '28px' : '24px',
-                fontWeight: '600',
-                color: '#333',
-                margin: '0 0 8px 0'
-              }}>
-                {product.name}
-              </h1>
               
-              <div style={{
-                fontSize: isTablet ? '32px' : '28px',
-                fontWeight: 'bold',
-                color: '#4CAF50',
-                marginBottom: '8px'
-              }}>
-                {product.price}
-              </div>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px'
-              }}>
-                <span style={{ color: '#FF9800' }}>📍</span>
-                <span style={{ color: '#666', fontSize: '14px' }}>{product.location}</span>
-              </div>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  {[1,2,3,4,5].map(star => (
-                    <span key={star} style={{ color: '#FFD700', fontSize: '16px' }}>⭐</span>
-                  ))}
-                </div>
-                <span style={{ color: '#333', fontWeight: '600', fontSize: '14px' }}>
-                  {product.rating}
-                </span>
-                <span style={{ color: '#666', fontSize: '14px' }}>
-                  ({product.reviews})
-                </span>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div style={{ 
-              background: 'white', 
-              padding: isTablet ? '24px' : '20px', 
-              marginBottom: '16px'
-            }}>
-              <h3 style={{
-                fontSize: '18px',
-                fontWeight: '600',
-                color: '#333',
-                marginBottom: '12px'
-              }}>
-                Description
-              </h3>
-              <p style={{
-                color: '#666',
-                lineHeight: '1.6',
-                fontSize: '14px',
-                marginBottom: '12px'
-              }}>
-                {product.description}
-              </p>
-              <p style={{
-                color: '#666',
-                lineHeight: '1.6',
-                fontSize: '14px'
-              }}>
-                {product.detailedDescription}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Common Sections for both Desktop and Mobile */}
-        <div style={{
-          padding: isDesktop ? '0 48px' : isTablet ? '0 32px' : '0 16px'
-        }}>
-
-          {/* Meet the Artisan */}
-          <div style={{ 
-            background: 'white', 
-            padding: isDesktop ? '32px' : isTablet ? '24px' : '20px', 
-            borderRadius: '16px',
-            marginBottom: '16px'
-          }}>
-            <h3 style={{
-              fontSize: isDesktop ? '24px' : '18px',
-              fontWeight: '600',
-              color: '#333',
-              marginBottom: '16px'
-            }}>
-              Meet the Artisan
-            </h3>
-            
-            <div style={{ 
-              display: 'flex', 
-              gap: isDesktop ? '20px' : '12px', 
-              alignItems: 'flex-start',
-              flexDirection: isMobile ? 'column' : 'row',
-              textAlign: isMobile ? 'center' : 'left'
-            }}>
-              <img 
-                src={product.artisan.image}
-                alt={product.artisan.name}
-                style={{
-                  width: isDesktop ? '80px' : isTablet ? '60px' : '50px',
-                  height: isDesktop ? '80px' : isTablet ? '60px' : '50px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  margin: isMobile ? '0 auto 12px' : 0
-                }}
-              />
-              <div style={{ flex: 1 }}>
-                <h4 style={{
-                  fontSize: isDesktop ? '20px' : '16px',
-                  fontWeight: '600',
-                  color: '#333',
-                  margin: '0 0 4px 0'
+              {product.reviews !== undefined && (
+                <div style={{
+                  padding: getSpacing('20px', '18px', '16px', '14px', '12px'),
+                  background: '#f8f8f8',
+                  borderRadius: getFontSize('12px', '10px', '8px', '6px', '4px'),
+                  textAlign: 'center'
                 }}>
-                  {product.artisan.name}
-                </h4>
-                <p style={{
-                  fontSize: isDesktop ? '14px' : '12px',
-                  color: '#4CAF50',
-                  margin: '0 0 8px 0',
-                  fontWeight: '500'
-                }}>
-                  {product.artisan.title}
-                </p>
-                <p style={{
-                  fontSize: isDesktop ? '16px' : '14px',
-                  color: '#666',
-                  lineHeight: '1.5'
-                }}>
-                  {product.artisan.experience}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Location & Distance */}
-          <div style={{ 
-            background: 'white', 
-            padding: isDesktop ? '32px' : isTablet ? '24px' : '20px', 
-            borderRadius: '16px',
-            marginBottom: '16px'
-          }}>
-            <h3 style={{
-              fontSize: isDesktop ? '24px' : '18px',
-              fontWeight: '600',
-              color: '#333',
-              marginBottom: '16px'
-            }}>
-              Location & Distance
-            </h3>
-            
-            <div style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '12px',
-              marginBottom: '16px'
-            }}>
-              <span style={{ color: '#4CAF50', fontSize: '16px' }}>📍</span>
-              <div>
-                <h4 style={{
-                  fontSize: isDesktop ? '18px' : '16px',
-                  fontWeight: '600',
-                  color: '#333',
-                  margin: '0 0 4px 0'
-                }}>
-                  {product.location_details.name}
-                </h4>
-                <p style={{
-                  fontSize: '14px',
-                  color: '#666',
-                  lineHeight: '1.5',
-                  margin: '0 0 12px 0'
-                }}>
-                  {product.location_details.description}
-                </p>
-                
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: isMobile ? 'column' : 'row',
-                  gap: isMobile ? '4px' : '16px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '14px' }}>🚗</span>
-                    <span style={{ fontSize: '14px', color: '#666' }}>
-                      {product.location_details.distance}
-                    </span>
+                  <div style={{
+                    fontSize: getFontSize('14px', '13px', '12px', '11px', '10px'),
+                    color: '#666',
+                    marginBottom: '8px',
+                    fontWeight: '500'
+                  }}>
+                    Ulasan
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '14px' }}>📏</span>
-                    <span style={{ fontSize: '14px', color: '#666' }}>
-                      {product.location_details.distance_km}
-                    </span>
+                  <div style={{
+                    fontSize: getFontSize('20px', '18px', '16px', '15px', '14px'),
+                    fontWeight: '600',
+                    color: '#333'
+                  }}>
+                    {product.reviews || 0} ulasan
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
-
-          {/* Share This Product */}
-          <div style={{ 
-            background: 'white', 
-            padding: isDesktop ? '32px' : isTablet ? '24px' : '20px', 
-            borderRadius: '16px',
-            marginBottom: '16px'
-          }}>
-            <h3 style={{
-              fontSize: isDesktop ? '24px' : '18px',
-              fontWeight: '600',
-              color: '#333',
-              marginBottom: '16px'
-            }}>
-              Share This Product
-            </h3>
-            
-            <div style={{ 
-              display: 'grid',
-              gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : '1fr',
-              gap: '12px'
-            }}>
-              <button style={{
-                background: '#1877F2',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                padding: isDesktop ? '16px' : '12px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
-                📘 Facebook
-              </button>
-              
-              <button style={{
-                background: '#1DA1F2',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                padding: isDesktop ? '16px' : '12px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
-                🐦 Twitter
-              </button>
-              
-              <button style={{
-                background: '#25D366',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                padding: isDesktop ? '16px' : '12px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
-                💬 WhatsApp
-              </button>
-            </div>
-          </div>
-
-          {/* Report */}
-          <div style={{ padding: '0 20px', marginBottom: '20px' }}>
-            <button style={{
-              background: 'none',
-              border: 'none',
-              color: '#FF5722',
-              fontSize: '14px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              🚩 Report this product
-            </button>
-          </div>
-
-          {/* Copyright */}
-          <div style={{
-            padding: '20px',
-            textAlign: 'center',
-            color: '#999',
-            fontSize: '12px'
-          }}>
-            © 2025 Indonesian Cultural Heritage Marketplace. All rights reserved
-          </div>
-
         </div>
-
       </div>
-
-      {/* Mobile Bottom Actions */}
-      {!isDesktop && (
-        <div style={{
-          position: 'fixed',
-          bottom: isMobile ? '80px' : '20px',
-          left: '16px',
-          right: '16px',
-          background: 'white',
-          borderRadius: '16px',
-          padding: '16px',
-          boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-          display: 'flex',
-          gap: '12px',
-          zIndex: 100
-        }}>
-          <button style={{
-            flex: 1,
-            background: 'transparent',
-            color: '#4CAF50',
-            border: '2px solid #4CAF50',
-            borderRadius: '12px',
-            padding: '12px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer'
-          }}>
-            Add to Cart
-          </button>
-          
-          <button style={{
-            flex: 1,
-            background: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '12px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer'
-          }}>
-            Buy Now
-          </button>
-        </div>
-      )}
-
     </div>
   );
 };

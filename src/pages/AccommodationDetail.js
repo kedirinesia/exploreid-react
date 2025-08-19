@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import apiService from '../services/apiService';
 
 const AccommodationDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [accommodation, setAccommodation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -11,10 +16,124 @@ const AccommodationDetail = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    fetchAccommodationDetail();
+  }, [id]);
+
+  const fetchAccommodationDetail = async () => {
+    try {
+      setLoading(true);
+      const data = await apiService.getDataById(id);
+      if (data && data.category === 'Accommodation') {
+        setAccommodation(data);
+        setError(null);
+      } else {
+        setError('Akomodasi tidak ditemukan');
+      }
+    } catch (err) {
+      setError('Gagal memuat detail akomodasi. Silakan coba lagi.');
+      console.error('Error fetching accommodation detail:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatPrice = (price) => {
+    if (typeof price === 'number') {
+      return `Rp ${price.toLocaleString('id-ID')}`;
+    }
+    return price || 'Hubungi untuk harga';
+  };
+
+  const handleContact = (contact) => {
+    if (contact) {
+      // Format nomor telepon untuk WhatsApp
+      const phoneNumber = contact.replace(/\D/g, '');
+      const whatsappUrl = `https://wa.me/62${phoneNumber.startsWith('0') ? phoneNumber.slice(1) : phoneNumber}`;
+      window.open(whatsappUrl, '_blank');
+    }
+  };
+
   const isDesktop = windowWidth >= 1024;
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
   const isMobile = windowWidth < 768;
   const isSmallMobile = windowWidth < 480;
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: '#f5f5f5',
+        paddingTop: '60px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          fontSize: '16px',
+          color: '#666'
+        }}>
+          <div 
+            className="loading-spinner"
+            style={{
+              width: '20px',
+              height: '20px',
+              border: '2px solid #4CAF50',
+              borderTop: '2px solid transparent',
+              borderRadius: '50%'
+            }}
+          ></div>
+          Memuat detail akomodasi...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !accommodation) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: '#f5f5f5',
+        paddingTop: '60px',
+        padding: '20px'
+      }}>
+        <div style={{
+          background: 'white',
+          padding: '40px',
+          borderRadius: '16px',
+          textAlign: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          maxWidth: '400px',
+          width: '100%'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏨</div>
+          <h3 style={{ marginBottom: '16px', color: '#333' }}>Oops!</h3>
+          <p style={{ color: '#666', marginBottom: '24px' }}>{error}</p>
+          <button 
+            onClick={() => navigate('/accommodation')}
+            style={{
+              background: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Kembali ke Daftar Akomodasi
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Media query styles using CSS-in-JS approach
   const mediaQueries = `
@@ -52,85 +171,24 @@ const AccommodationDetail = () => {
     }
     
     @media (min-width: 1024px) {
-      .mobile-bottom-actions {
-        display: none !important;
+      .desktop-layout {
+        grid-template-columns: 2fr 1fr !important;
+        gap: 32px !important;
       }
     }
   `;
-
-  // Mock data based on the screenshot
-  const accommodation = {
-    id: 1,
-    name: "Rumah Singgah Malang",
-    price: "Rp 450,000",
-    originalPrice: "Rp 500,000",
-    discount: "25% off recently stays",
-    rating: 4.7,
-    reviews: 127,
-    location: "Malang City Center",
-    distance: "0.6 km from center",
-    type: "/night",
-    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    host: {
-      name: "Ibu Dewi Kusuma",
-      type: "Superhost",
-      responseTime: "Responds within 1 hour",
-      hostingYears: "5 years hosting"
-    },
-    about: "Experience authentic Indonesian hospitality at Rumah Singgah Malang, a charming homestay located in the heart of Malang City. Our traditional Javanese home offers comfortable accommodation with modern amenities.",
-    offers: [
-      { icon: "📶", label: "Free WiFi" },
-      { icon: "❄️", label: "Air Conditioning" },
-      { icon: "🍳", label: "Shared Kitchen" },
-      { icon: "🥞", label: "Free Breakfast" },
-      { icon: "👥", label: "Garden View" },
-      { icon: "🅿️", label: "Free Parking" },
-      { icon: "🧺", label: "Laundry Service" },
-      { icon: "🛡️", label: "24/7 Security" },
-      { icon: "🚿", label: "Shared Bathroom" },
-      { icon: "👥", label: "Common Area" },
-      { icon: "🧳", label: "Luggage Storage" },
-      { icon: "🎭", label: "Cultural Tours" }
-    ],
-    address: "Jl. Kawi No. 15, Klojen, Malang City, East Java 65111, Indonesia",
-    nearbyAttractions: [
-      { name: "Malang City Square", distance: "0.5 km" },
-      { name: "Jodipan Colorful Village", distance: "1.2 km" },
-      { name: "Malang Station", distance: "0.8 km" },
-      { name: "Sarinah Mall", distance: "0.6 km" },
-      { name: "Museum Angkut", distance: "2.1 km" },
-      { name: "Tugu Malang", distance: "0.4 km" }
-    ],
-    houseRules: [
-      { icon: "🕐", text: "Check-in: 2:00 PM - 10:00 PM" },
-      { icon: "🕚", text: "Check-out: 11:00 AM" },
-      { icon: "🚭", text: "No smoking inside the house" },
-      { icon: "🎉", text: "No parties or events" },
-      { icon: "🕕", text: "Quiet hours: 10:00 PM - 7:00 AM" },
-      { icon: "👥", text: "Maximum 4 guests per room" },
-      { icon: "👟", text: "Shoes off inside the house" },
-      { icon: "🙏", text: "Respect local customs and traditions" }
-    ],
-    checkInOut: {
-      checkIn: "2:00 PM - 10:00 PM",
-      checkOut: "11:00 AM",
-      selfCheckIn: "Check-in with host greeting",
-      cancellation: "Free cancellation up to 24 hours before check-in"
-    }
-  };
 
   return (
     <>
       <style>{mediaQueries}</style>
       
-      <div style={{ 
-        minHeight: '100vh', 
-        background: '#f5f5f5', 
+      <div style={{
+        minHeight: '100vh',
+        background: '#f5f5f5',
         paddingTop: '60px',
         paddingBottom: isDesktop ? '50px' : '100px',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}>
-        
         {/* Header */}
         <div className="detail-header" style={{
           background: 'white',
@@ -139,16 +197,11 @@ const AccommodationDetail = () => {
           display: 'flex',
           alignItems: 'center',
           gap: isSmallMobile ? '12px' : '16px',
-          position: 'fixed',
-          top: '60px',
-          left: 0,
-          right: 0,
-          zIndex: 100,
           maxWidth: isDesktop ? '1200px' : '100%',
           margin: '0 auto'
         }}>
           <button 
-            onClick={() => window.history.back()}
+            onClick={() => navigate('/accommodation')}
             style={{
               background: 'none',
               border: 'none',
@@ -162,670 +215,414 @@ const AccommodationDetail = () => {
             ←
           </button>
           <h1 style={{
-            fontSize: isDesktop ? '20px' : isSmallMobile ? '14px' : '16px',
+            fontSize: isDesktop ? '24px' : isTablet ? '20px' : isSmallMobile ? '16px' : '18px',
             fontWeight: '600',
             color: '#333',
             margin: 0,
             flex: 1,
             lineHeight: '1.2'
           }}>
-            {isSmallMobile ? 'Hotel Details' : accommodation.name}
+            Detail Akomodasi
           </h1>
-          <button style={{
-            background: 'none',
-            border: 'none',
-            fontSize: isSmallMobile ? '16px' : '18px',
-            cursor: 'pointer',
-            padding: '8px',
-            minWidth: '40px',
-            minHeight: '40px'
-          }}>
-            📤
-          </button>
         </div>
 
-        {/* Main Content Container */}
+        {/* Main Content */}
         <div style={{
           maxWidth: isDesktop ? '1200px' : '100%',
           margin: '0 auto',
-          paddingTop: '80px'
+          padding: isDesktop ? '32px 48px' : isTablet ? '24px 32px' : isSmallMobile ? '16px 12px' : '20px 16px'
         }}>
-
-          {/* Desktop Layout */}
-          {isDesktop ? (
-            <div className="desktop-layout" style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '48px',
-              padding: '32px 48px'
-            }}>
-              {/* Left Column - Image and Details */}
-              <div>
-                <div style={{ position: 'relative', marginBottom: '24px' }}>
+          <div className="desktop-layout" style={{
+            display: 'grid',
+            gridTemplateColumns: isDesktop ? '2fr 1fr' : '1fr',
+            gap: isDesktop ? '32px' : '24px'
+          }}>
+            
+            {/* Left Column - Main Details */}
+            <div>
+              {/* Image Gallery */}
+              <div style={{
+                background: 'white',
+                borderRadius: isSmallMobile ? '12px' : '16px',
+                overflow: 'hidden',
+                marginBottom: isSmallMobile ? '16px' : '24px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+              }}>
+                <div style={{ position: 'relative' }}>
                   <img 
-                    src={accommodation.image}
+                    src={accommodation.imageUrl || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={accommodation.name}
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                    }}
                     style={{
                       width: '100%',
-                      height: '400px',
-                      objectFit: 'cover',
-                      borderRadius: '16px'
+                      height: isDesktop ? '400px' : isTablet ? '300px' : isSmallMobile ? '200px' : '250px',
+                      objectFit: 'cover'
                     }}
                   />
-                </div>
-              </div>
-
-              {/* Right Column - Booking Info */}
-              <div>
-                <div style={{ background: 'white', padding: '32px', borderRadius: '16px', marginBottom: '24px' }}>
-                  <h1 style={{
-                    fontSize: '32px',
-                    fontWeight: '600',
-                    color: '#333',
-                    margin: '0 0 8px 0'
-                  }}>
-                    {accommodation.name}
-                  </h1>
                   
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    marginBottom: '16px'
-                  }}>
-                    <span style={{ color: '#FF9800' }}>📍</span>
-                    <span style={{ color: '#666', fontSize: '16px' }}>
-                      {accommodation.location} · {accommodation.distance}
-                    </span>
-                  </div>
-
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    marginBottom: '16px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {[1,2,3,4,5].map(star => (
-                        <span key={star} style={{ 
-                          color: star <= Math.floor(accommodation.rating) ? '#FFD700' : '#E0E0E0', 
-                          fontSize: '18px' 
-                        }}>⭐</span>
-                      ))}
+                  {/* Type Badge */}
+                  {accommodation.type && (
+                    <div style={{
+                      position: 'absolute',
+                      top: isSmallMobile ? '12px' : '20px',
+                      left: isSmallMobile ? '12px' : '20px',
+                      background: '#4CAF50',
+                      color: 'white',
+                      padding: isSmallMobile ? '6px 12px' : '8px 16px',
+                      borderRadius: isSmallMobile ? '12px' : '20px',
+                      fontSize: isSmallMobile ? '11px' : '12px',
+                      fontWeight: '600'
+                    }}>
+                      {accommodation.type}
                     </div>
-                    <span style={{ color: '#333', fontWeight: '600', fontSize: '16px' }}>
-                      {accommodation.rating}
-                    </span>
-                    <span style={{ color: '#666', fontSize: '16px' }}>
-                      ({accommodation.reviews} reviews)
-                    </span>
-                  </div>
-
+                  )}
+                  
+                  {/* Discount Badge */}
                   {accommodation.discount && (
                     <div style={{
-                      background: '#E8F5E8',
-                      color: '#4CAF50',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      marginBottom: '16px',
-                      display: 'inline-block'
+                      position: 'absolute',
+                      top: isSmallMobile ? '12px' : '20px',
+                      right: isSmallMobile ? '12px' : '20px',
+                      background: '#FF5722',
+                      color: 'white',
+                      padding: isSmallMobile ? '6px 12px' : '8px 16px',
+                      borderRadius: isSmallMobile ? '12px' : '20px',
+                      fontSize: isSmallMobile ? '11px' : '12px',
+                      fontWeight: '600'
                     }}>
                       {accommodation.discount}
                     </div>
                   )}
-
-                  <div style={{ marginBottom: '24px' }}>
-                    <div style={{
-                      fontSize: '36px',
-                      fontWeight: 'bold',
-                      color: '#333'
-                    }}>
-                      {accommodation.price}
-                      <span style={{ fontSize: '16px', color: '#666', fontWeight: '400' }}>
-                        {accommodation.type}
-                      </span>
-                    </div>
-                    {accommodation.originalPrice && (
-                      <div style={{
-                        fontSize: '16px',
-                        color: '#999',
-                        textDecoration: 'line-through'
-                      }}>
-                        {accommodation.originalPrice}
-                      </div>
-                    )}
-                  </div>
-
-                  <button style={{
-                    background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '12px',
-                    padding: '16px 32px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    width: '100%',
-                    marginBottom: '16px'
-                  }}>
-                    Reserve Now
-                  </button>
-
-                  <button style={{
-                    background: 'transparent',
-                    color: '#4CAF50',
-                    border: '2px solid #4CAF50',
-                    borderRadius: '12px',
-                    padding: '16px 32px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    width: '100%'
-                  }}>
-                    Contact Host
-                  </button>
                 </div>
-              </div>
-            </div>
-          ) : (
-            /* Mobile Layout */
-            <div>
-              {/* Main Image */}
-              <div style={{ position: 'relative', marginBottom: '20px' }}>
-                <img 
-                  src={accommodation.image}
-                  alt={accommodation.name}
-                  style={{
-                    width: '100%',
-                    height: isSmallMobile ? '200px' : '250px',
-                    objectFit: 'cover'
-                  }}
-                />
               </div>
 
               {/* Basic Info */}
-              <div className="detail-section" style={{ 
-                background: 'white', 
-                padding: isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px', 
-                marginBottom: '16px'
+              <div className="detail-section" style={{
+                background: 'white',
+                borderRadius: isSmallMobile ? '12px' : '16px',
+                padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px 16px',
+                marginBottom: isSmallMobile ? '16px' : '24px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
               }}>
                 <h1 style={{
-                  fontSize: isTablet ? '28px' : isSmallMobile ? '20px' : '24px',
-                  fontWeight: '600',
+                  fontSize: isDesktop ? '32px' : isTablet ? '28px' : isSmallMobile ? '20px' : '24px',
+                  fontWeight: '700',
                   color: '#333',
-                  margin: '0 0 8px 0',
+                  margin: '0 0 12px 0',
                   lineHeight: '1.2'
                 }}>
                   {accommodation.name}
                 </h1>
-                
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '8px'
-                }}>
-                  <span style={{ color: '#FF9800' }}>📍</span>
-                  <span style={{ color: '#666', fontSize: isSmallMobile ? '12px' : '14px' }}>
-                    {accommodation.location} · {accommodation.distance}
-                  </span>
-                </div>
 
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '12px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {[1,2,3,4,5].map(star => (
-                      <span key={star} style={{ 
-                        color: star <= Math.floor(accommodation.rating) ? '#FFD700' : '#E0E0E0', 
-                        fontSize: isSmallMobile ? '14px' : '16px' 
-                      }}>⭐</span>
-                    ))}
-                  </div>
-                  <span style={{ color: '#333', fontWeight: '600', fontSize: isSmallMobile ? '12px' : '14px' }}>
-                    {accommodation.rating}
-                  </span>
-                  <span style={{ color: '#666', fontSize: isSmallMobile ? '12px' : '14px' }}>
-                    ({accommodation.reviews} reviews)
-                  </span>
-                </div>
-
-                {accommodation.discount && (
-                  <div style={{
-                    background: '#E8F5E8',
-                    color: '#4CAF50',
-                    padding: isSmallMobile ? '4px 8px' : '6px 12px',
-                    borderRadius: '8px',
-                    fontSize: isSmallMobile ? '10px' : '12px',
-                    fontWeight: '600',
-                    marginBottom: '12px',
-                    display: 'inline-block'
+                {accommodation.product && (
+                  <p style={{
+                    fontSize: isDesktop ? '18px' : isSmallMobile ? '14px' : '16px',
+                    color: '#666',
+                    margin: '0 0 16px 0',
+                    lineHeight: '1.5'
                   }}>
-                    {accommodation.discount}
+                    {accommodation.product}
+                  </p>
+                )}
+
+                {/* Location */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '16px'
+                }}>
+                  <span style={{ fontSize: isSmallMobile ? '14px' : '16px' }}>📍</span>
+                  <div>
+                    <div style={{
+                      fontSize: isSmallMobile ? '14px' : '16px',
+                      fontWeight: '600',
+                      color: '#333'
+                    }}>
+                      {accommodation.location}
+                    </div>
+                    {accommodation.distance && (
+                      <div style={{
+                        fontSize: isSmallMobile ? '12px' : '14px',
+                        color: '#666'
+                      }}>
+                        {accommodation.distance}
+                      </div>
+                    )}
+                    {accommodation.address && (
+                      <div style={{
+                        fontSize: isSmallMobile ? '11px' : '12px',
+                        color: '#999',
+                        marginTop: '4px'
+                      }}>
+                        {accommodation.address}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rating */}
+                {accommodation.rating && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#FFD700', fontSize: isSmallMobile ? '16px' : '18px' }}>⭐</span>
+                      <span style={{ 
+                        fontSize: isSmallMobile ? '16px' : '18px', 
+                        fontWeight: '600', 
+                        color: '#333' 
+                      }}>
+                        {accommodation.rating}
+                      </span>
+                    </div>
+                    {accommodation.reviews && (
+                      <span style={{ fontSize: isSmallMobile ? '13px' : '14px', color: '#666' }}>
+                        ({accommodation.reviews} ulasan)
+                      </span>
+                    )}
                   </div>
                 )}
 
-                <div>
-                  <div style={{
-                    fontSize: isTablet ? '32px' : isSmallMobile ? '22px' : '28px',
-                    fontWeight: 'bold',
-                    color: '#333'
-                  }}>
-                    {accommodation.price}
-                    <span style={{ fontSize: isSmallMobile ? '12px' : '14px', color: '#666', fontWeight: '400' }}>
-                      {accommodation.type}
-                    </span>
-                  </div>
-                  {accommodation.originalPrice && (
-                    <div style={{
-                      fontSize: isSmallMobile ? '12px' : '14px',
-                      color: '#999',
-                      textDecoration: 'line-through'
+                {/* Description */}
+                {accommodation.description && (
+                  <div>
+                    <h3 style={{
+                      fontSize: isDesktop ? '20px' : isSmallMobile ? '16px' : '18px',
+                      fontWeight: '600',
+                      color: '#333',
+                      margin: '0 0 12px 0'
                     }}>
-                      {accommodation.originalPrice}
-                    </div>
-                  )}
-                </div>
+                      Deskripsi
+                    </h3>
+                    <p style={{
+                      fontSize: isDesktop ? '16px' : isSmallMobile ? '13px' : '14px',
+                      color: '#666',
+                      lineHeight: '1.6',
+                      margin: 0
+                    }}>
+                      {accommodation.description}
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
 
-          {/* Common Sections for both Desktop and Mobile */}
-          <div style={{
-            padding: isDesktop ? '0 48px' : isTablet ? '0 32px' : isSmallMobile ? '0 12px' : '0 16px'
-          }}>
-
-            {/* Host Information */}
-            <div className="detail-section" style={{ 
-              background: 'white', 
-              padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px', 
-              borderRadius: isSmallMobile ? '12px' : '16px',
-              marginBottom: '16px'
-            }}>
-              <div style={{ 
-                display: 'flex', 
-                gap: isDesktop ? '16px' : isSmallMobile ? '8px' : '12px', 
-                alignItems: 'center',
-                marginBottom: '16px'
-              }}>
-                <div style={{
-                  width: isDesktop ? '60px' : isSmallMobile ? '40px' : '50px',
-                  height: isDesktop ? '60px' : isSmallMobile ? '40px' : '50px',
-                  borderRadius: '50%',
-                  background: '#4CAF50',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: isDesktop ? '24px' : isSmallMobile ? '16px' : '20px',
-                  fontWeight: '600'
+              {/* Features */}
+              {accommodation.features && accommodation.features.length > 0 && (
+                <div className="detail-section" style={{
+                  background: 'white',
+                  borderRadius: isSmallMobile ? '12px' : '16px',
+                  padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px 16px',
+                  marginBottom: isSmallMobile ? '16px' : '24px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
                 }}>
-                  👤
-                </div>
-                <div style={{ flex: 1 }}>
-                  <h4 style={{
-                    fontSize: isDesktop ? '18px' : isSmallMobile ? '14px' : '16px',
+                  <h3 style={{
+                    fontSize: isDesktop ? '20px' : isSmallMobile ? '16px' : '18px',
                     fontWeight: '600',
                     color: '#333',
-                    margin: '0 0 4px 0'
+                    margin: '0 0 16px 0'
                   }}>
-                    Hosted by {accommodation.host.name}
-                  </h4>
-                  <p style={{
-                    fontSize: isDesktop ? '14px' : isSmallMobile ? '10px' : '12px',
-                    color: '#4CAF50',
-                    margin: '0',
-                    fontWeight: '600'
+                    Fasilitas
+                  </h3>
+                  <div className="feature-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: isDesktop ? 'repeat(2, 1fr)' : '1fr',
+                    gap: isSmallMobile ? '8px' : '12px'
                   }}>
-                    {accommodation.host.type}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="detail-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr',
-                gap: isSmallMobile ? '4px' : '8px',
-                fontSize: isDesktop ? '14px' : isSmallMobile ? '11px' : '13px',
-                color: '#666'
-              }}>
-                <div>• {accommodation.host.responseTime}</div>
-                <div>• {accommodation.host.hostingYears}</div>
-              </div>
-            </div>
-
-            {/* About this place */}
-            <div className="detail-section" style={{ 
-              background: 'white', 
-              padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px', 
-              borderRadius: isSmallMobile ? '12px' : '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{
-                fontSize: isDesktop ? '24px' : isSmallMobile ? '16px' : '18px',
-                fontWeight: '600',
-                color: '#333',
-                marginBottom: '16px'
-              }}>
-                About this place
-              </h3>
-              <p style={{
-                color: '#666',
-                lineHeight: '1.6',
-                fontSize: isDesktop ? '16px' : isSmallMobile ? '12px' : '14px',
-                marginBottom: '16px'
-              }}>
-                {accommodation.about}
-              </p>
-              <button style={{
-                background: 'none',
-                border: 'none',
-                color: '#4CAF50',
-                fontSize: isDesktop ? '16px' : isSmallMobile ? '12px' : '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                padding: 0,
-                textDecoration: 'underline'
-              }}>
-                Read more
-              </button>
-            </div>
-
-            {/* What this place offers */}
-            <div className="detail-section" style={{ 
-              background: 'white', 
-              padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px', 
-              borderRadius: isSmallMobile ? '12px' : '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{
-                fontSize: isDesktop ? '24px' : isSmallMobile ? '16px' : '18px',
-                fontWeight: '600',
-                color: '#333',
-                marginBottom: '16px'
-              }}>
-                What this place offers
-              </h3>
-              
-              <div className="feature-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: isDesktop ? 'repeat(2, 1fr)' : '1fr',
-                gap: isDesktop ? '16px' : isSmallMobile ? '8px' : '12px'
-              }}>
-                {accommodation.offers.map((offer, index) => (
-                  <div key={index} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: isSmallMobile ? '8px' : '12px',
-                    padding: isSmallMobile ? '4px 0' : '8px 0'
-                  }}>
-                    <span style={{ fontSize: isDesktop ? '20px' : isSmallMobile ? '16px' : '18px' }}>
-                      {offer.icon}
-                    </span>
-                    <span style={{
-                      fontSize: isDesktop ? '16px' : isSmallMobile ? '12px' : '14px',
-                      color: '#333'
-                    }}>
-                      {offer.label}
-                    </span>
+                    {accommodation.features.map((feature, index) => (
+                      <div 
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: isSmallMobile ? '8px' : '12px',
+                          background: '#f8f8f8',
+                          borderRadius: isSmallMobile ? '8px' : '12px'
+                        }}
+                      >
+                        <span style={{ color: '#4CAF50', fontSize: isSmallMobile ? '14px' : '16px' }}>✓</span>
+                        <span style={{ 
+                          fontSize: isSmallMobile ? '13px' : '14px', 
+                          color: '#333',
+                          fontWeight: '500'
+                        }}>
+                          {feature}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              )}
 
-            {/* Where you'll be */}
-            <div className="detail-section" style={{ 
-              background: 'white', 
-              padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px', 
-              borderRadius: isSmallMobile ? '12px' : '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{
-                fontSize: isDesktop ? '24px' : isSmallMobile ? '16px' : '18px',
-                fontWeight: '600',
-                color: '#333',
-                marginBottom: '16px'
-              }}>
-                Where you'll be
-              </h3>
-              
-              <div style={{
-                background: '#f8f8f8',
-                padding: isSmallMobile ? '12px' : '16px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                fontSize: isDesktop ? '14px' : isSmallMobile ? '11px' : '13px',
-                color: '#666',
-                lineHeight: '1.4'
-              }}>
-                📍 {accommodation.address}
-              </div>
-            </div>
-
-            {/* Nearby attractions */}
-            <div className="detail-section" style={{ 
-              background: 'white', 
-              padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px', 
-              borderRadius: isSmallMobile ? '12px' : '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{
-                fontSize: isDesktop ? '24px' : isSmallMobile ? '16px' : '18px',
-                fontWeight: '600',
-                color: '#333',
-                marginBottom: '16px'
-              }}>
-                Nearby attractions
-              </h3>
-              
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: isSmallMobile ? '8px' : '12px'
-              }}>
-                {accommodation.nearbyAttractions.map((attraction, index) => (
-                  <div key={index} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: isSmallMobile ? '8px 0' : '12px 0',
-                    borderBottom: index < accommodation.nearbyAttractions.length - 1 ? '1px solid #f0f0f0' : 'none'
+              {/* Host Info */}
+              {accommodation.host && (
+                <div className="detail-section" style={{
+                  background: 'white',
+                  borderRadius: isSmallMobile ? '12px' : '16px',
+                  padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px 16px',
+                  marginBottom: isSmallMobile ? '16px' : '24px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                }}>
+                  <h3 style={{
+                    fontSize: isDesktop ? '20px' : isSmallMobile ? '16px' : '18px',
+                    fontWeight: '600',
+                    color: '#333',
+                    margin: '0 0 16px 0'
                   }}>
-                    <span style={{
-                      fontSize: isDesktop ? '16px' : isSmallMobile ? '12px' : '14px',
-                      color: '#333',
+                    Host Information
+                  </h3>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: isSmallMobile ? '12px' : '16px'
+                  }}>
+                    <div style={{
+                      width: isSmallMobile ? '40px' : '50px',
+                      height: isSmallMobile ? '40px' : '50px',
+                      borderRadius: '50%',
+                      background: '#4CAF50',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px'
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: isSmallMobile ? '18px' : '22px',
+                      fontWeight: '600'
                     }}>
-                      🏛️ {attraction.name}
-                    </span>
-                    <span style={{
-                      fontSize: isDesktop ? '14px' : isSmallMobile ? '10px' : '12px',
-                      color: '#666'
-                    }}>
-                      {attraction.distance}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* House rules */}
-            <div className="detail-section" style={{ 
-              background: 'white', 
-              padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px', 
-              borderRadius: isSmallMobile ? '12px' : '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{
-                fontSize: isDesktop ? '24px' : isSmallMobile ? '16px' : '18px',
-                fontWeight: '600',
-                color: '#333',
-                marginBottom: '16px'
-              }}>
-                House rules
-              </h3>
-              
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: isSmallMobile ? '8px' : '12px'
-              }}>
-                {accommodation.houseRules.map((rule, index) => (
-                  <div key={index} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: isSmallMobile ? '8px' : '12px',
-                    padding: isSmallMobile ? '4px 0' : '8px 0'
-                  }}>
-                    <span style={{ fontSize: isDesktop ? '18px' : isSmallMobile ? '14px' : '16px' }}>
-                      {rule.icon}
-                    </span>
-                    <span style={{
-                      fontSize: isDesktop ? '16px' : isSmallMobile ? '12px' : '14px',
-                      color: '#333'
-                    }}>
-                      {rule.text}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Good to know */}
-            <div className="detail-section" style={{ 
-              background: 'white', 
-              padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px', 
-              borderRadius: isSmallMobile ? '12px' : '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{
-                fontSize: isDesktop ? '24px' : isSmallMobile ? '16px' : '18px',
-                fontWeight: '600',
-                color: '#333',
-                marginBottom: '16px'
-              }}>
-                Good to know
-              </h3>
-              
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isDesktop ? 'repeat(2, 1fr)' : '1fr',
-                gap: '16px'
-              }}>
-                <div>
-                  <h4 style={{
-                    fontSize: isDesktop ? '16px' : isSmallMobile ? '12px' : '14px',
-                    fontWeight: '600',
-                    color: '#333',
-                    marginBottom: '8px'
-                  }}>
-                    Check-in & Check-out
-                  </h4>
-                  <div style={{ fontSize: isDesktop ? '14px' : isSmallMobile ? '11px' : '13px', color: '#666', marginBottom: '4px' }}>
-                    Check-in: {accommodation.checkInOut.checkIn}
-                  </div>
-                  <div style={{ fontSize: isDesktop ? '14px' : isSmallMobile ? '11px' : '13px', color: '#666', marginBottom: '4px' }}>
-                    Check-out: {accommodation.checkInOut.checkOut}
-                  </div>
-                  <div style={{ fontSize: isDesktop ? '14px' : isSmallMobile ? '11px' : '13px', color: '#666' }}>
-                    Self check-in with host greeting
+                      👤
+                    </div>
+                    <div>
+                      <div style={{ 
+                        fontSize: isSmallMobile ? '14px' : '16px', 
+                        fontWeight: '600', 
+                        color: '#333',
+                        marginBottom: '4px'
+                      }}>
+                        {accommodation.host}
+                      </div>
+                      {accommodation.hostType && (
+                        <div style={{ 
+                          fontSize: isSmallMobile ? '12px' : '14px', 
+                          color: '#4CAF50',
+                          fontWeight: '500'
+                        }}>
+                          {accommodation.hostType}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                
-                <div>
-                  <h4 style={{
-                    fontSize: isDesktop ? '16px' : isSmallMobile ? '12px' : '14px',
-                    fontWeight: '600',
-                    color: '#333',
-                    marginBottom: '8px'
+              )}
+            </div>
+
+            {/* Right Column - Booking Card */}
+            <div>
+              <div style={{
+                background: 'white',
+                borderRadius: isSmallMobile ? '12px' : '16px',
+                padding: isDesktop ? '32px' : isTablet ? '24px' : isSmallMobile ? '16px 12px' : '20px 16px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                position: isDesktop ? 'sticky' : 'static',
+                top: isDesktop ? '100px' : 'auto'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: '8px',
+                  marginBottom: '20px'
+                }}>
+                  <span style={{
+                    fontSize: isDesktop ? '28px' : isSmallMobile ? '20px' : '24px',
+                    fontWeight: '700',
+                    color: '#333'
                   }}>
-                    Cancellation policy
-                  </h4>
-                  <div style={{ fontSize: isDesktop ? '14px' : isSmallMobile ? '11px' : '13px', color: '#666' }}>
-                    {accommodation.checkInOut.cancellation}
+                    {formatPrice(accommodation.price)}
+                  </span>
+                  <span style={{ 
+                    fontSize: isSmallMobile ? '13px' : '14px', 
+                    color: '#666' 
+                  }}>
+                    /malam
+                  </span>
+                </div>
+
+                {accommodation.originalPrice && (
+                  <div style={{
+                    fontSize: isSmallMobile ? '14px' : '16px',
+                    color: '#999',
+                    textDecoration: 'line-through',
+                    marginBottom: '12px'
+                  }}>
+                    {formatPrice(accommodation.originalPrice)}
                   </div>
+                )}
+
+                {/* Contact Button */}
+                {accommodation.contact && (
+                  <button
+                    onClick={() => handleContact(accommodation.contact)}
+                    style={{
+                      background: '#25D366',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: isSmallMobile ? '12px' : '16px',
+                      padding: isDesktop ? '16px 24px' : isSmallMobile ? '12px 16px' : '14px 20px',
+                      fontSize: isDesktop ? '16px' : isSmallMobile ? '13px' : '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      width: '100%',
+                      justifyContent: 'center',
+                      transition: 'all 0.3s ease',
+                      marginBottom: '16px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#1DA851';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = '#25D366';
+                    }}
+                  >
+                    <span>💬</span>
+                    Hubungi via WhatsApp
+                  </button>
+                )}
+
+                {/* Book Now Button */}
+                <button style={{
+                  background: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: isSmallMobile ? '12px' : '16px',
+                  padding: isDesktop ? '16px 24px' : isSmallMobile ? '12px 16px' : '14px 20px',
+                  fontSize: isDesktop ? '16px' : isSmallMobile ? '13px' : '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  width: '100%',
+                  transition: 'all 0.3s ease'
+                }}>
+                  Pesan Sekarang
+                </button>
+
+                <div style={{
+                  textAlign: 'center',
+                  fontSize: isSmallMobile ? '11px' : '12px',
+                  color: '#999',
+                  marginTop: '12px'
+                }}>
+                  Anda tidak akan dikenakan biaya sekarang
                 </div>
               </div>
             </div>
-
-          </div>
-
-        </div>
-
-        {/* Mobile Bottom Actions */}
-        <div className="mobile-bottom-actions" style={{
-          position: 'fixed',
-          bottom: isMobile ? '80px' : '20px',
-          left: isSmallMobile ? '12px' : '16px',
-          right: isSmallMobile ? '12px' : '16px',
-          background: 'white',
-          borderRadius: isSmallMobile ? '12px' : '16px',
-          padding: isSmallMobile ? '12px' : '16px',
-          boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-          display: isDesktop ? 'none' : 'flex',
-          gap: '12px',
-          zIndex: 100
-        }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            flex: 1
-          }}>
-            <button style={{
-              background: '#25D366',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              padding: isSmallMobile ? '8px' : '12px',
-              fontSize: isSmallMobile ? '12px' : '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              minHeight: isSmallMobile ? '36px' : '40px'
-            }}>
-              💬 WhatsApp
-            </button>
-          </div>
-          
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            flex: 1
-          }}>
-            <button style={{
-              background: '#1877F2',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              padding: isSmallMobile ? '8px' : '12px',
-              fontSize: isSmallMobile ? '12px' : '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              minHeight: isSmallMobile ? '36px' : '40px'
-            }}>
-              📞 Call Now
-            </button>
           </div>
         </div>
-
       </div>
     </>
   );

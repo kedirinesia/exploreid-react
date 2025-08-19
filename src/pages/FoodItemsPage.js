@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 
-const SouvenirsPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+const FoodItemsPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [categories, setCategories] = useState(['All']);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -17,23 +15,18 @@ const SouvenirsPage = () => {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    fetchFoodItems();
   }, []);
 
-  const fetchData = async () => {
+  const fetchFoodItems = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getAllData();
+      const data = await apiService.getDataByCategory('Food Items');
       setProducts(data);
-      
-      // Get unique categories
-      const uniqueCategories = ['All', ...new Set(data.map(item => item.category).filter(Boolean))];
-      setCategories(uniqueCategories);
-      
       setError(null);
     } catch (err) {
-      setError('Gagal memuat data. Silakan coba lagi.');
-      console.error('Error fetching data:', err);
+      setError('Gagal memuat data makanan. Silakan coba lagi.');
+      console.error('Error fetching food items:', err);
     } finally {
       setLoading(false);
     }
@@ -44,37 +37,21 @@ const SouvenirsPage = () => {
     setSearchTerm(term);
     
     if (term.trim() === '') {
-      fetchData();
+      fetchFoodItems();
       return;
     }
 
     try {
       setLoading(true);
-      const searchResults = await apiService.searchData(term);
-      setProducts(searchResults);
+      const allSearchResults = await apiService.searchData(term);
+      // Filter untuk Food Items saja
+      const foodSearchResults = allSearchResults.filter(item => 
+        item.category && item.category.toLowerCase() === 'food items'
+      );
+      setProducts(foodSearchResults);
       setError(null);
     } catch (err) {
       setError('Gagal mencari data. Silakan coba lagi.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCategoryFilter = async (category) => {
-    setSelectedCategory(category);
-    
-    try {
-      setLoading(true);
-      let data;
-      if (category === 'All') {
-        data = await apiService.getAllData();
-      } else {
-        data = await apiService.getDataByCategory(category);
-      }
-      setProducts(data);
-      setError(null);
-    } catch (err) {
-      setError('Gagal memfilter data. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -87,9 +64,41 @@ const SouvenirsPage = () => {
     return price || 'Hubungi Penjual';
   };
 
+  // Responsive breakpoints
+  const isXLDesktop = windowWidth >= 1440;
+  const isLargeDesktop = windowWidth >= 1200;
   const isDesktop = windowWidth >= 1024;
   const isTablet = windowWidth >= 768;
+  const isLargeMobile = windowWidth >= 480;
   const isMobile = windowWidth < 768;
+  const isSmallMobile = windowWidth < 480;
+
+  // Dynamic grid columns
+  const getGridColumns = () => {
+    if (isXLDesktop) return 4;
+    if (isLargeDesktop) return 3;
+    if (isDesktop) return 3;
+    if (isTablet) return 2;
+    return 1;
+  };
+
+  // Dynamic spacing
+  const getSpacing = (xl, lg, md, sm, xs) => {
+    if (isXLDesktop) return xl;
+    if (isLargeDesktop) return lg;
+    if (isDesktop) return md;
+    if (isTablet) return sm;
+    return xs;
+  };
+
+  // Dynamic font sizes
+  const getFontSize = (xl, lg, md, sm, xs) => {
+    if (isXLDesktop) return xl;
+    if (isLargeDesktop) return lg;
+    if (isDesktop) return md;
+    if (isTablet) return sm;
+    return xs;
+  };
 
   return (
     <div style={{ 
@@ -103,90 +112,91 @@ const SouvenirsPage = () => {
       {/* Header with Back Button */}
       <div style={{
         background: 'white',
-        padding: isDesktop ? '20px 32px' : '16px 20px',
+        padding: getSpacing('24px 64px', '20px 48px', '18px 32px', '16px 24px', '14px 16px'),
         borderBottom: '1px solid #e0e0e0',
         display: 'flex',
         alignItems: 'center',
-        gap: '16px',
+        gap: getSpacing('20px', '18px', '16px', '14px', '12px'),
+        maxWidth: isXLDesktop ? '1400px' : isLargeDesktop ? '1200px' : '100%',
+        margin: '0 auto',
         boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
       }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px'
+        <button 
+          onClick={() => window.history.back()}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: getFontSize('22px', '20px', '18px', '16px', '14px'),
+            cursor: 'pointer',
+            padding: getSpacing('12px', '10px', '8px', '6px', '4px'),
+            borderRadius: '8px',
+            transition: 'background 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            if (!isMobile) {
+              e.target.style.background = '#f5f5f5';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isMobile) {
+              e.target.style.background = 'none';
+            }
+          }}
+        >
+          ←
+        </button>
+        <h1 style={{
+          fontSize: getFontSize('32px', '28px', '24px', '20px', '18px'),
+          fontWeight: '700',
+          color: '#333',
+          margin: 0,
+          flex: 1
         }}>
-          <button 
-            onClick={() => window.history.back()}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '18px',
-              cursor: 'pointer',
-              padding: '8px',
-              borderRadius: '8px',
-              transition: 'background 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              if (!isMobile) {
-                e.target.style.background = '#f5f5f5';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isMobile) {
-                e.target.style.background = 'none';
-              }
-            }}
-          >
-            ←
-          </button>
-          <h1 style={{
-            fontSize: isDesktop ? '24px' : '20px',
-            fontWeight: '700',
-            color: '#333',
-            margin: 0,
-            flex: 1
-          }}>
-            Souvenirs & Kerajinan
-          </h1>
-        </div>
+          Makanan & Kuliner
+        </h1>
       </div>
 
       {/* Main Content Container */}
       <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '0 16px'
+        maxWidth: isXLDesktop ? '1400px' : isLargeDesktop ? '1200px' : '100%',
+        margin: '0 auto'
       }}>
 
         {/* Search Bar */}
         <div style={{ 
           background: 'white', 
-          padding: isDesktop ? '24px' : '20px',
-          marginBottom: '16px',
+          padding: getSpacing('32px 64px', '28px 48px', '24px 32px', '20px 24px', '16px 16px'),
+          marginBottom: getSpacing('20px', '18px', '16px', '14px', '12px'),
           boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
         }}>
           <div style={{
             position: 'relative',
             background: '#f8f8f8',
             borderRadius: '25px',
-            padding: '12px 20px',
+            padding: getSpacing('16px 24px', '14px 20px', '12px 18px', '10px 16px', '8px 14px'),
             display: 'flex',
             alignItems: 'center',
-            maxWidth: '600px',
+            maxWidth: getSpacing('700px', '650px', '600px', '100%', '100%'),
             margin: isDesktop ? '0 auto' : 0,
             transition: 'all 0.3s ease'
-          }}>
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255, 152, 0, 0.1)';
+            e.currentTarget.style.borderColor = '#FF9800';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.borderColor = 'transparent';
+          }}
+          >
             <span style={{ 
               color: '#999', 
               marginRight: '12px',
-              fontSize: '16px'
+              fontSize: getFontSize('18px', '16px', '16px', '14px', '14px')
             }}>🔍</span>
             <input 
               type="text"
-              placeholder="Cari kerajinan atau produk yang Anda inginkan..."
+              placeholder="Cari makanan atau kuliner yang Anda inginkan..."
               value={searchTerm}
               onChange={handleSearch}
               style={{
@@ -194,63 +204,11 @@ const SouvenirsPage = () => {
                 border: 'none',
                 background: 'transparent',
                 outline: 'none',
-                fontSize: '14px',
+                fontSize: getFontSize('16px', '15px', '14px', '13px', '12px'),
                 color: '#333',
                 fontWeight: '400'
               }}
             />
-          </div>
-        </div>
-
-        {/* Category Tabs */}
-        <div style={{ 
-          background: 'white', 
-          padding: isDesktop ? '24px' : '20px',
-          marginBottom: '16px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
-        }}>
-          <div style={{
-            display: 'flex',
-            gap: '12px',
-            overflowX: 'auto',
-            paddingBottom: '8px',
-            justifyContent: isDesktop ? 'center' : 'flex-start',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none'
-          }}>
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => handleCategoryFilter(category)}
-                style={{
-                  background: selectedCategory === category ? '#4CAF50' : 'transparent',
-                  color: selectedCategory === category ? 'white' : '#666',
-                  border: selectedCategory === category ? 'none' : '2px solid #e0e0e0',
-                  padding: isDesktop ? '12px 24px' : '8px 16px',
-                  borderRadius: '25px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.3s ease',
-                  boxShadow: selectedCategory === category ? '0 4px 12px rgba(76, 175, 80, 0.3)' : 'none'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isMobile && selectedCategory !== category) {
-                    e.target.style.borderColor = '#4CAF50';
-                    e.target.style.color = '#4CAF50';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isMobile && selectedCategory !== category) {
-                    e.target.style.borderColor = '#e0e0e0';
-                    e.target.style.color = '#666';
-                  }
-                }}
-              >
-                {category}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -260,8 +218,8 @@ const SouvenirsPage = () => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            padding: '80px',
-            fontSize: '16px',
+            padding: getSpacing('80px', '70px', '60px', '50px', '40px'),
+            fontSize: getFontSize('18px', '16px', '16px', '14px', '13px'),
             color: '#666'
           }}>
             <div style={{
@@ -272,14 +230,14 @@ const SouvenirsPage = () => {
               <div 
                 className="loading-spinner"
                 style={{
-                  width: '24px',
-                  height: '24px',
-                  border: '3px solid #4CAF50',
+                  width: getFontSize('28px', '24px', '20px', '18px', '16px'),
+                  height: getFontSize('28px', '24px', '20px', '18px', '16px'),
+                  border: '3px solid #FF9800',
                   borderTop: '3px solid transparent',
                   borderRadius: '50%'
                 }}
               ></div>
-              Memuat data...
+              Memuat data makanan...
             </div>
           </div>
         )}
@@ -289,25 +247,25 @@ const SouvenirsPage = () => {
           <div style={{
             background: '#ffebee',
             color: '#c62828',
-            padding: '24px',
+            padding: getSpacing('28px', '24px', '20px', '18px', '16px'),
             borderRadius: '12px',
-            margin: '0 0 20px 0',
+            margin: getSpacing('0 64px', '0 48px', '0 32px', '0 24px', '0 16px'),
             textAlign: 'center',
             boxShadow: '0 4px 12px rgba(198, 40, 40, 0.1)'
           }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
             {error}
             <button 
-              onClick={fetchData}
+              onClick={fetchFoodItems}
               style={{
                 background: '#c62828',
                 color: 'white',
                 border: 'none',
-                padding: '10px 20px',
+                padding: getSpacing('12px 24px', '10px 20px', '8px 16px', '6px 12px', '4px 8px'),
                 borderRadius: '8px',
                 marginLeft: '16px',
                 cursor: 'pointer',
-                fontSize: '12px',
+                fontSize: getFontSize('14px', '13px', '12px', '11px', '10px'),
                 fontWeight: '600',
                 transition: 'all 0.3s ease'
               }}
@@ -329,37 +287,35 @@ const SouvenirsPage = () => {
 
         {/* Products Grid */}
         {!loading && !error && (
-          <div>
+          <div style={{ 
+            padding: getSpacing('0 64px', '0 48px', '0 32px', '0 24px', '0 16px')
+          }}>
             {products.length === 0 ? (
               <div style={{
                 textAlign: 'center',
-                padding: '80px 20px',
+                padding: getSpacing('80px 40px', '70px 35px', '60px 30px', '50px 25px', '40px 20px'),
                 color: '#666'
               }}>
-                <div style={{ fontSize: '48px', marginBottom: '20px' }}>🔍</div>
+                <div style={{ fontSize: getFontSize('64px', '56px', '48px', '40px', '32px'), marginBottom: '20px' }}>🍜</div>
                 <h3 style={{ 
-                  fontSize: '20px',
+                  fontSize: getFontSize('24px', '22px', '20px', '18px', '16px'),
                   fontWeight: '600',
                   marginBottom: '12px',
                   color: '#333'
-                }}>Tidak ada produk ditemukan</h3>
+                }}>Belum ada produk makanan</h3>
                 <p style={{ 
-                  fontSize: '14px',
+                  fontSize: getFontSize('16px', '15px', '14px', '13px', '12px'),
                   lineHeight: '1.5',
                   maxWidth: '400px',
                   margin: '0 auto'
-                }}>Coba kata kunci pencarian yang berbeda atau pilih kategori lain.</p>
+                }}>Produk makanan akan segera ditambahkan. Silakan periksa kembali nanti.</p>
               </div>
             ) : (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: isDesktop 
-                  ? 'repeat(auto-fit, minmax(300px, 1fr))' 
-                  : isTablet 
-                    ? 'repeat(2, 1fr)' 
-                    : '1fr',
-                gap: isDesktop ? '24px' : '16px',
-                marginBottom: '32px'
+                gridTemplateColumns: `repeat(${getGridColumns()}, 1fr)`,
+                gap: getSpacing('32px', '28px', '24px', '20px', '16px'),
+                marginBottom: getSpacing('40px', '32px', '24px', '20px', '16px')
               }}>
                 {products.map(product => (
                   <div 
@@ -367,7 +323,7 @@ const SouvenirsPage = () => {
                     onClick={() => window.location.href = `/product/${product.id}`}
                     style={{
                       background: 'white',
-                      borderRadius: '16px',
+                      borderRadius: getFontSize('20px', '18px', '16px', '14px', '12px'),
                       overflow: 'hidden',
                       boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
                       cursor: 'pointer',
@@ -388,42 +344,40 @@ const SouvenirsPage = () => {
                       }
                     }}
                   >
-                    {product.category && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '12px',
-                        left: '12px',
-                        background: '#4CAF50',
-                        color: 'white',
-                        padding: '6px 12px',
-                        borderRadius: '12px',
-                        fontSize: '10px',
-                        fontWeight: '600',
-                        zIndex: 1,
-                        boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)'
-                      }}>
-                        {product.category}
-                      </div>
-                    )}
+                    <div style={{
+                      position: 'absolute',
+                      top: getFontSize('16px', '14px', '12px', '10px', '8px'),
+                      left: getFontSize('16px', '14px', '12px', '10px', '8px'),
+                      background: '#FF9800',
+                      color: 'white',
+                      padding: getFontSize('8px 16px', '7px 14px', '6px 12px', '5px 10px', '4px 8px'),
+                      borderRadius: getFontSize('16px', '14px', '12px', '10px', '8px'),
+                      fontSize: getFontSize('12px', '11px', '10px', '9px', '8px'),
+                      fontWeight: '600',
+                      zIndex: 1,
+                      boxShadow: '0 2px 8px rgba(255, 152, 0, 0.3)'
+                    }}>
+                      Food Items
+                    </div>
                     
                     <img 
-                      src={product.imageUrl || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'}
+                      src={product.imageUrl || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'}
                       alt={product.name}
                       onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
+                        e.target.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
                       }}
                       style={{
                         width: '100%',
-                        height: isDesktop ? '200px' : '150px',
+                        height: getFontSize('280px', '250px', '220px', '200px', '180px'),
                         objectFit: 'cover'
                       }}
                     />
                     
                     <div style={{ 
-                      padding: isDesktop ? '20px' : '16px'
+                      padding: getSpacing('28px', '24px', '20px', '18px', '16px')
                     }}>
                       <h3 style={{
-                        fontSize: isDesktop ? '16px' : '14px',
+                        fontSize: getFontSize('20px', '18px', '16px', '15px', '14px'),
                         fontWeight: '600',
                         color: '#333',
                         margin: '0 0 12px 0',
@@ -434,7 +388,7 @@ const SouvenirsPage = () => {
                       
                       {product.product && (
                         <p style={{
-                          fontSize: '13px',
+                          fontSize: getFontSize('15px', '14px', '13px', '12px', '11px'),
                           color: '#666',
                           margin: '0 0 12px 0',
                           lineHeight: '1.5',
@@ -447,9 +401,24 @@ const SouvenirsPage = () => {
                         </p>
                       )}
 
+                      {product.description && (
+                        <p style={{
+                          fontSize: getFontSize('13px', '12px', '11px', '10px', '9px'),
+                          color: '#999',
+                          margin: '0 0 12px 0',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {product.description}
+                        </p>
+                      )}
+
                       {product.location && (
                         <div style={{
-                          fontSize: '11px',
+                          fontSize: getFontSize('13px', '12px', '11px', '10px', '9px'),
                           color: '#999',
                           marginBottom: '16px',
                           display: 'flex',
@@ -469,37 +438,37 @@ const SouvenirsPage = () => {
                         gap: '12px'
                       }}>
                         <span style={{
-                          fontSize: isDesktop ? '16px' : '14px',
+                          fontSize: getFontSize('20px', '18px', '16px', '15px', '14px'),
                           fontWeight: '700',
-                          color: '#4CAF50'
+                          color: '#FF9800'
                         }}>
                           {formatPrice(product.price)}
                         </span>
                         
                         <button style={{
-                          background: '#4CAF50',
+                          background: '#FF9800',
                           color: 'white',
                           border: 'none',
-                          borderRadius: '16px',
-                          padding: isDesktop ? '8px 16px' : '6px 12px',
-                          fontSize: '12px',
+                          borderRadius: '20px',
+                          padding: getFontSize('12px 24px', '10px 20px', '8px 16px', '7px 14px', '6px 12px'),
+                          fontSize: getFontSize('14px', '13px', '12px', '11px', '10px'),
                           fontWeight: '600',
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
-                          boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)'
+                          boxShadow: '0 2px 8px rgba(255, 152, 0, 0.3)'
                         }}
                         onMouseEnter={(e) => {
                           if (!isMobile) {
-                            e.target.style.background = '#45A049';
+                            e.target.style.background = '#F57C00';
                             e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.4)';
+                            e.target.style.boxShadow = '0 4px 12px rgba(255, 152, 0, 0.4)';
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!isMobile) {
-                            e.target.style.background = '#4CAF50';
+                            e.target.style.background = '#FF9800';
                             e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.3)';
+                            e.target.style.boxShadow = '0 2px 8px rgba(255, 152, 0, 0.3)';
                           }
                         }}
                         >
@@ -519,4 +488,4 @@ const SouvenirsPage = () => {
   );
 };
 
-export default SouvenirsPage; 
+export default FoodItemsPage; 

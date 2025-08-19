@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import Header from './components/header';   
 import Home from './pages/Home';
 import SouvenirsPage from './pages/SouvenirsPage';
+import FoodItemsPage from './pages/FoodItemsPage';
 import ProductDetail from './pages/ProductDetail';
 import AccommodationDetail from './pages/AccommodationDetail';
 import AccommodationList from './pages/AccommodationList';
@@ -27,56 +28,69 @@ const MainContent = styled.main`
   }
 `;
 
+const BottomNav = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 12px 0;
+  z-index: 1000;
+  
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const NavItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  cursor: pointer;
+  padding: 8px;
+`;
+
+const NavIcon = styled.span`
+  font-size: 20px;
+  color: ${props => props.active ? '#4CAF50' : '#999'};
+`;
+
+const NavLabel = styled.span`
+  font-size: 10px;
+  color: ${props => props.active ? '#4CAF50' : '#999'};
+  font-weight: ${props => props.active ? '600' : '400'};
+`;
+
 const BottomNavigation = ({ windowWidth }) => {
   const isDesktop = windowWidth >= 768;
   
   if (isDesktop) return null; // Hide on desktop
   
+  const navItems = [
+    { icon: '🏠', label: 'Home', active: true, path: '/' },
+    { icon: '🧭', label: 'Explore', active: false, path: '/explore' },
+    { icon: '💾', label: 'Saved', active: false, path: '/saved' },
+    { icon: '👤', label: 'Profile', active: false, path: '/profile' }
+  ];
+  
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      background: 'white',
-      borderTop: '1px solid #e0e0e0',
-      display: 'flex',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      padding: '12px 0',
-      zIndex: 1000
-    }}>
-      {[
-        { icon: '🏠', label: 'Home', active: true, path: '/' },
-        { icon: '🧭', label: 'Explore', active: false, path: '/explore' },
-        { icon: '💾', label: 'Saved', active: false, path: '/saved' },
-        { icon: '👤', label: 'Profile', active: false, path: '/profile' }
-      ].map((item, index) => (
-        <div 
+    <BottomNav>
+      {navItems.map((item, index) => (
+        <NavItem 
           key={index} 
           onClick={() => window.location.href = item.path}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-            flex: 1,
-            cursor: 'pointer',
-            padding: '8px'
-          }}
         >
-          <span style={{
-            fontSize: '20px',
-            color: item.active ? '#4CAF50' : '#999'
-          }}>{item.icon}</span>
-          <span style={{
-            fontSize: '10px',
-            color: item.active ? '#4CAF50' : '#999',
-            fontWeight: item.active ? '600' : '400'
-          }}>{item.label}</span>
-        </div>
+          <NavIcon active={item.active}>{item.icon}</NavIcon>
+          <NavLabel active={item.active}>{item.label}</NavLabel>
+        </NavItem>
       ))}
-    </div>
+    </BottomNav>
   );
 };
 
@@ -97,6 +111,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/souvenirs" element={<SouvenirsPage />} />
+            <Route path="/culinary" element={<FoodItemsPage />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/accommodation/:id" element={<AccommodationDetail />} />
             <Route path="/accommodation" element={<AccommodationList />} />
