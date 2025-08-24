@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -39,7 +43,9 @@ const Header = () => {
     gap: '8px',
     textDecoration: 'none',
     color: '#2c3e50',
-    transition: 'transform 0.3s ease'
+    transition: 'transform 0.3s ease',
+    cursor: 'pointer',
+    userSelect: 'none'
   };
 
   const logoIconStyle = {
@@ -76,7 +82,9 @@ const Header = () => {
     padding: '8px 16px',
     borderRadius: '20px',
     transition: 'all 0.3s ease',
-    fontSize: '14px'
+    fontSize: '14px',
+    cursor: 'pointer',
+    userSelect: 'none'
   };
 
   const rightIconsStyle = {
@@ -166,7 +174,9 @@ const Header = () => {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    border: '1px solid transparent'
+    border: '1px solid transparent',
+    cursor: 'pointer',
+    userSelect: 'none'
   };
 
   const searchButtonStyle = {
@@ -211,44 +221,48 @@ const Header = () => {
     <>
       <header style={headerStyle}>
         <div style={headerContentStyle}>
-          <a 
-            href="/" 
+          <div 
             style={logoStyle}
+            onClick={() => navigate('/')}
             onMouseEnter={(e) => {
               if (!isMobile) {
                 e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.cursor = 'pointer';
               }
             }}
             onMouseLeave={(e) => {
               if (!isMobile) {
                 e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.cursor = 'pointer';
               }
             }}
           >
             <div style={logoIconStyle}>E</div>
             <span style={logoTextStyle}>ExploreID</span>
-          </a>
+          </div>
           
           {/* Desktop Navigation */}
           <nav style={desktopNavStyle}>
             {navItems.map((item, index) => (
-              <a 
+              <div 
                 key={index}
-                href={item.href} 
                 style={navLinkStyle}
+                onClick={() => navigate(item.href)}
                 onMouseEnter={(e) => {
                   e.target.style.background = '#E8F5E8';
                   e.target.style.color = '#4CAF50';
                   e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.cursor = 'pointer';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.background = 'transparent';
                   e.target.style.color = '#2c3e50';
                   e.target.style.transform = 'translateY(0)';
+                  e.target.style.cursor = 'pointer';
                 }}
               >
                 {item.label}
-              </a>
+              </div>
             ))}
           </nav>
           
@@ -293,23 +307,49 @@ const Header = () => {
             >
               🔔
             </button>
-            <button 
-              style={iconButtonStyle}
-              onMouseEnter={(e) => {
-                if (!isMobile) {
-                  e.target.style.background = '#f5f5f5';
-                  e.target.style.color = '#4CAF50';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isMobile) {
-                  e.target.style.background = 'none';
-                  e.target.style.color = '#666';
-                }
-              }}
-            >
-              👤
-            </button>
+            {isAuthenticated ? (
+              <div style={{ position: 'relative' }}>
+                <button 
+                  style={iconButtonStyle}
+                  onClick={() => navigate('/profile')}
+                  onMouseEnter={(e) => {
+                    if (!isMobile) {
+                      e.target.style.background = '#f5f5f5';
+                      e.target.style.color = '#4CAF50';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isMobile) {
+                      e.target.style.background = 'none';
+                      e.target.style.color = '#666';
+                    }
+                  }}
+                  title={`Profile: ${user?.username}`}
+                >
+                  {user?.username?.charAt(0).toUpperCase() || '👤'}
+                </button>
+              </div>
+            ) : (
+              <button 
+                style={iconButtonStyle}
+                onClick={() => navigate('/login')}
+                onMouseEnter={(e) => {
+                  if (!isMobile) {
+                    e.target.style.background = '#f5f5f5';
+                    e.target.style.color = '#4CAF50';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isMobile) {
+                    e.target.style.background = 'none';
+                    e.target.style.color = '#666';
+                  }
+                }}
+                title="Login"
+              >
+                👤
+              </button>
+            )}
             
             {/* Mobile Menu Button */}
             <button 
@@ -342,27 +382,31 @@ const Header = () => {
       <div style={mobileMenuStyle}>
         <div style={mobileNavLinksStyle}>
           {navItems.map((item, index) => (
-            <a 
+            <div 
               key={index}
-              href={item.href} 
               style={mobileNavLinkStyle}
-              onClick={() => setIsMenuOpen(false)}
+              onClick={() => {
+                navigate(item.href);
+                setIsMenuOpen(false);
+              }}
               onMouseEnter={(e) => {
                 e.target.style.background = '#E8F5E8';
                 e.target.style.borderColor = '#4CAF50';
                 e.target.style.color = '#4CAF50';
+                e.target.style.cursor = 'pointer';
               }}
               onMouseLeave={(e) => {
                 e.target.style.background = '#f8f9fa';
                 e.target.style.borderColor = 'transparent';
                 e.target.style.color = '#2c3e50';
+                e.target.style.cursor = 'pointer';
               }}
             >
               <span style={{ fontSize: '18px' }}>
                 {item.icon}
               </span>
               {item.label}
-            </a>
+            </div>
           ))}
         </div>
         
@@ -381,6 +425,84 @@ const Header = () => {
         >
           🔍 Search Destinations
         </button>
+
+        {/* Authentication Section in Mobile Menu */}
+        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e0e0e0' }}>
+          {isAuthenticated ? (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '14px' }}>
+                Welcome, {user?.username}!
+              </p>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  style={{
+                    ...searchButtonStyle,
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    flex: 1,
+                    marginTop: 0
+                  }}
+                  onClick={() => {
+                    navigate('/profile');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  👤 Profile
+                </button>
+                <button 
+                  style={{
+                    ...searchButtonStyle,
+                    background: '#dc3545',
+                    flex: 1,
+                    marginTop: 0
+                  }}
+                  onClick={() => {
+                    logout();
+                    setIsMenuOpen(false);
+                    navigate('/');
+                  }}
+                >
+                  🚪 Logout
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '14px' }}>
+                Sign in to access your profile
+              </p>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  style={{
+                    ...searchButtonStyle,
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    flex: 1,
+                    marginTop: 0
+                  }}
+                  onClick={() => {
+                    navigate('/login');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  🔑 Login
+                </button>
+                <button 
+                  style={{
+                    ...searchButtonStyle,
+                    background: 'linear-gradient(135deg, #28a745, #20c997)',
+                    flex: 1,
+                    marginTop: 0
+                  }}
+                  onClick={() => {
+                    navigate('/register');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  ✨ Register
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
