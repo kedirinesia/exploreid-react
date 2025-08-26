@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
+import { useRating } from '../context/RatingContext';
+import RatingComponent from '../components/RatingComponent';
+import ProductRatingSummary from '../components/ProductRatingSummary';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { refreshTrigger } = useRating();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -53,6 +58,8 @@ const ProductDetail = () => {
       window.open(whatsappUrl, '_blank');
     }
   };
+
+
 
   // Responsive breakpoints
   const isXLDesktop = windowWidth >= 1440;
@@ -426,64 +433,28 @@ const ProductDetail = () => {
               </button>
             )}
 
-            {/* Additional Info */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isDesktop ? 'repeat(2, 1fr)' : '1fr',
-              gap: getSpacing('16px', '14px', '12px', '10px', '8px'),
-              marginTop: getSpacing('32px', '28px', '24px', '20px', '16px')
-            }}>
-              {product.rating !== undefined && (
-                <div style={{
-                  padding: getSpacing('20px', '18px', '16px', '14px', '12px'),
-                  background: '#f8f8f8',
-                  borderRadius: getFontSize('12px', '10px', '8px', '6px', '4px'),
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    fontSize: getFontSize('14px', '13px', '12px', '11px', '10px'),
-                    color: '#666',
-                    marginBottom: '8px',
-                    fontWeight: '500'
-                  }}>
-                    Rating
-                  </div>
-                  <div style={{
-                    fontSize: getFontSize('20px', '18px', '16px', '15px', '14px'),
-                    fontWeight: '600',
-                    color: '#333'
-                  }}>
-                    ⭐ {product.rating || 'Belum ada rating'}
-                  </div>
-                </div>
-              )}
-              
-              {product.reviews !== undefined && (
-                <div style={{
-                  padding: getSpacing('20px', '18px', '16px', '14px', '12px'),
-                  background: '#f8f8f8',
-                  borderRadius: getFontSize('12px', '10px', '8px', '6px', '4px'),
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    fontSize: getFontSize('14px', '13px', '12px', '11px', '10px'),
-                    color: '#666',
-                    marginBottom: '8px',
-                    fontWeight: '500'
-                  }}>
-                    Ulasan
-                  </div>
-                  <div style={{
-                    fontSize: getFontSize('20px', '18px', '16px', '15px', '14px'),
-                    fontWeight: '600',
-                    color: '#333'
-                  }}>
-                    {product.reviews || 0} ulasan
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Rating Summary - Real-time data */}
+            <ProductRatingSummary 
+              productId={id} 
+              windowWidth={windowWidth}
+              refreshTrigger={refreshTrigger}
+            />
           </div>
+        </div>
+
+        {/* Rating Section */}
+        <div style={{
+          background: 'white',
+          borderRadius: getFontSize('24px', '20px', '16px', '14px', '12px'),
+          overflow: 'hidden',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+          marginTop: getSpacing('40px', '32px', '28px', '24px', '20px')
+        }}>
+          {/* Rating Component */}
+          <RatingComponent 
+            productId={id}
+            productName={product?.name || "Produk"}
+          />
         </div>
       </div>
     </div>

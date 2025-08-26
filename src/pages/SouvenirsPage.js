@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
+import ProductRatingDisplay from '../components/ProductRatingDisplay';
 
 const SouvenirsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -468,13 +469,23 @@ const SouvenirsPage = () => {
                         flexWrap: 'wrap',
                         gap: '12px'
                       }}>
-                        <span style={{
-                          fontSize: isDesktop ? '16px' : '14px',
-                          fontWeight: '700',
-                          color: '#4CAF50'
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '4px'
                         }}>
-                          {formatPrice(product.price)}
-                        </span>
+                          <span style={{
+                            fontSize: isDesktop ? '16px' : '14px',
+                            fontWeight: '700',
+                            color: '#4CAF50'
+                          }}>
+                            {formatPrice(product.price)}
+                          </span>
+                          <ProductRatingDisplay 
+                            productId={product.id} 
+                            size="small"
+                          />
+                        </div>
                         
                         <button style={{
                           background: '#4CAF50',

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
+import ProductRatingDisplay from '../components/ProductRatingDisplay';
 
 const Home = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -439,13 +440,23 @@ const Home = () => {
                             📍 {product.location}
                           </span>
                         )}
-                        <span style={{
-                          fontSize: isDesktop ? '16px' : '14px',
-                          fontWeight: '700',
-                          color: '#4CAF50'
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '4px'
                         }}>
-                          {formatPrice(product.price)}
-                        </span>
+                          <span style={{
+                            fontSize: isDesktop ? '16px' : '14px',
+                            fontWeight: '700',
+                            color: '#4CAF50'
+                          }}>
+                            {formatPrice(product.price)}
+                          </span>
+                          <ProductRatingDisplay 
+                            productId={product.id} 
+                            size="small"
+                          />
+                        </div>
                       </div>
                       
                       <button style={{

@@ -1,0 +1,26 @@
+.product-rating-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.product-rating-stars .star {
+  font-size: 1rem;
+  color: #ddd;
+  transition: color 0.2s ease;
+}
+
+.product-rating-stars .star.filled {
+  color: #ffc107;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .product-rating-stars .star {
+    font-size: 0.9rem;
+  }
+}
+
+/* Override margin when used inside InfoCard */
+.product-rating-summary {
+  margin-top: 0 !important;
+}

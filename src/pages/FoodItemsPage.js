@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
+import ProductRatingDisplay from '../components/ProductRatingDisplay';
 
 const FoodItemsPage = () => {
   const [products, setProducts] = useState([]);
@@ -437,13 +438,23 @@ const FoodItemsPage = () => {
                         flexWrap: 'wrap',
                         gap: '12px'
                       }}>
-                        <span style={{
-                          fontSize: getFontSize('20px', '18px', '16px', '15px', '14px'),
-                          fontWeight: '700',
-                          color: '#FF9800'
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '4px'
                         }}>
-                          {formatPrice(product.price)}
-                        </span>
+                          <span style={{
+                            fontSize: getFontSize('20px', '18px', '16px', '15px', '14px'),
+                            fontWeight: '700',
+                            color: '#FF9800'
+                          }}>
+                            {formatPrice(product.price)}
+                          </span>
+                          <ProductRatingDisplay 
+                            productId={product.id} 
+                            size="small"
+                          />
+                        </div>
                         
                         <button style={{
                           background: '#FF9800',

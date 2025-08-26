@@ -14,6 +14,7 @@ import Profile from './components/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import { AuthProvider } from './context/AuthContext';
+import { RatingProvider } from './context/RatingContext';
 import './App.css';
 
 
@@ -114,10 +115,11 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
-        <AppContainer>
-          {Header ? <Header /> : <div>Header not loaded</div>}
-          <MainContent>
+      <RatingProvider>
+        <Router>
+          <AppContainer>
+            {Header ? <Header /> : <div>Header not loaded</div>}
+            <MainContent>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/souvenirs" element={<SouvenirsPage />} />
@@ -142,7 +144,8 @@ function App() {
           </MainContent>
           <BottomNavigation windowWidth={windowWidth} />
         </AppContainer>
-      </Router>
+        </Router>
+      </RatingProvider>
     </AuthProvider>
   );
 }

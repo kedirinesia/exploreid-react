@@ -1,36 +1,82 @@
 import axios from 'axios';
 
 // Menggunakan CORS proxy untuk mengatasi masalah CORS
-const API_BASE_URL = 'https://cors-anywhere.herokuapp.com/https://bit.ly/46VcD8R';
+const API_BASE_URL = 'https://bit.ly/46VcD8R';
 // Alternatif proxy lain jika yang pertama tidak bekerja
-const ALTERNATIVE_PROXY = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://bit.ly/46VcD8R');
+const PROXY_OPTIONS = [
+  'https://api.allorigins.win/get?url=',
+  'https://cors.bridged.cc/',
+  'https://thingproxy.freeboard.io/fetch/',
+  'https://corsproxy.io/?'
+];
 
 class ApiService {
+  // Helper method untuk mencoba berbagai proxy
+  async tryWithProxies() {
+    for (const proxy of PROXY_OPTIONS) {
+      try {
+        console.log(`Trying proxy: ${proxy}`);
+        const proxyUrl = `${proxy}${encodeURIComponent(API_BASE_URL)}`;
+        const response = await axios.get(proxyUrl, {
+          timeout: 10000,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // Handle different proxy response formats
+        let data;
+        if (response.data.contents) {
+          // allorigins format
+          data = JSON.parse(response.data.contents);
+        } else if (response.data.data) {
+          // Some proxies wrap in data
+          data = response.data.data;
+        } else {
+          // Direct response
+          data = response.data;
+        }
+        
+        if (data && data.status === 'success') {
+          return data.data.filter(item => item.name && item.name.trim() !== '');
+        }
+      } catch (proxyError) {
+        console.log(`Proxy ${proxy} failed:`, proxyError.message);
+        continue;
+      }
+    }
+    throw new Error('All proxies failed');
+  }
+
   // Mengambil semua data dari API
   async getAllData() {
     try {
-      // Coba dengan proxy pertama
-      let response;
+      console.log('Fetching data from API...');
+      
+      // Coba langsung dulu (untuk production)
       try {
-        response = await axios.get(API_BASE_URL, {
+        const response = await axios.get(API_BASE_URL, {
+          timeout: 10000,
           headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           }
         });
-      } catch (corsError) {
-        console.log('Trying alternative proxy...');
-        // Jika gagal, coba dengan proxy alternatif
-        const altResponse = await axios.get(ALTERNATIVE_PROXY);
-        const data = JSON.parse(altResponse.data.contents);
-        response = { data };
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data.data.filter(item => item.name && item.name.trim() !== '');
+        }
+      } catch (directError) {
+        console.log('Direct API call failed, trying proxies...');
       }
       
-      if (response.data.status === 'success') {
-        return response.data.data.filter(item => item.name && item.name.trim() !== '');
-      }
-      throw new Error('API response status is not success');
+      // Jika direct gagal, coba dengan proxy
+      return await this.tryWithProxies();
+      
     } catch (error) {
       console.error('Error fetching data:', error);
+      console.log('Using fallback data...');
       // Fallback data untuk development
       return this.getFallbackData();
     }

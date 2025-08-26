@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
+import ProductRatingDisplay from '../components/ProductRatingDisplay';
 
 const AccommodationList = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -467,26 +468,14 @@ const AccommodationList = () => {
                         </div>
 
                         {/* Rating */}
-                        {accommodation.rating && (
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: isSmallMobile ? '6px' : '8px',
-                            marginBottom: isSmallMobile ? '8px' : '12px'
-                          }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <span style={{ color: '#FFD700', fontSize: isSmallMobile ? '12px' : '14px' }}>⭐</span>
-                              <span style={{ fontSize: isSmallMobile ? '12px' : '14px', fontWeight: '600', color: '#333' }}>
-                                {accommodation.rating}
-                              </span>
-                            </div>
-                            {accommodation.reviews && (
-                              <span style={{ fontSize: isSmallMobile ? '10px' : '12px', color: '#666' }}>
-                                ({accommodation.reviews} reviews)
-                              </span>
-                            )}
-                          </div>
-                        )}
+                        <div style={{
+                          marginBottom: isSmallMobile ? '8px' : '12px'
+                        }}>
+                          <ProductRatingDisplay 
+                            productId={accommodation.id} 
+                            size="small"
+                          />
+                        </div>
 
                         {/* Features */}
                         {accommodation.features && (

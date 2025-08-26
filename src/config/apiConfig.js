@@ -104,7 +104,7 @@ export const USER_URLS = {
 // ===== RATING & REVIEW API =====
 export const RATING_URLS = {
  
-  SUBMIT_RATING: 'https://script.google.com/macros/s/AKfycbxtPs0w5WQjQt4i2-QO64r7oXva0VLztDlTNMGTYc3_2PwKZ0XKBDrANx-gTweJB0HOfA/exec',
+  SUBMIT_RATING: 'https://script.google.com/macros/s/AKfycbzSvr4Y6cUJ573waTI-H7yzrsoiNRI7TzUUTIfUjI4r7QeMG1jY0FoYL9wBxs627dWZ/exec',
     /*
     CONTOH BODY SUBMIT_RATING :
     METHOD : POST
@@ -120,7 +120,11 @@ contoh response SUBMIT_RATING :
     "status": "success",
     "message": "Rating submitted",
     "data": {
-        "id": 2
+        "id": 8,
+        "productId": 5,
+        "userId": 2,
+        "rating": 5,
+        "review": "JANGAN DI BELI PRODUK KW!"
     }
 }
     */

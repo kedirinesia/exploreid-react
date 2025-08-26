@@ -45,7 +45,9 @@ const Header = () => {
     color: '#2c3e50',
     transition: 'transform 0.3s ease',
     cursor: 'pointer',
-    userSelect: 'none'
+    userSelect: 'none',
+    position: 'relative',
+    zIndex: 1001
   };
 
   const logoIconStyle = {
@@ -106,7 +108,9 @@ const Header = () => {
     height: '40px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    position: 'relative',
+    zIndex: 1001
   };
 
   const mobileMenuButtonStyle = {
@@ -134,7 +138,7 @@ const Header = () => {
     right: 0,
     bottom: 0,
     background: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 999,
+    zIndex: 998,
     backdropFilter: 'blur(4px)'
   };
 
@@ -149,7 +153,7 @@ const Header = () => {
     transform: isMenuOpen ? 'translateY(0)' : 'translateY(-100%)',
     opacity: isMenuOpen ? 1 : 0,
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    zIndex: 1000,
+    zIndex: 999,
     maxHeight: '70vh',
     overflowY: 'auto',
     boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
@@ -223,7 +227,12 @@ const Header = () => {
         <div style={headerContentStyle}>
           <div 
             style={logoStyle}
-            onClick={() => navigate('/')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Logo clicked - navigating to home');
+              navigate('/');
+            }}
             onMouseEnter={(e) => {
               if (!isMobile) {
                 e.currentTarget.style.transform = 'scale(1.05)';
@@ -311,7 +320,12 @@ const Header = () => {
               <div style={{ position: 'relative' }}>
                 <button 
                   style={iconButtonStyle}
-                  onClick={() => navigate('/profile')}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Profile icon clicked - navigating to profile');
+                    navigate('/profile');
+                  }}
                   onMouseEnter={(e) => {
                     if (!isMobile) {
                       e.target.style.background = '#f5f5f5';

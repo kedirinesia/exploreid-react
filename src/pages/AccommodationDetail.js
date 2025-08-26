@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
+import { useRating } from '../context/RatingContext';
+import RatingComponent from '../components/RatingComponent';
+import ProductRatingSummary from '../components/ProductRatingSummary';
 
 const AccommodationDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { refreshTrigger } = useRating();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [accommodation, setAccommodation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -363,31 +367,12 @@ const AccommodationDetail = () => {
                   </div>
                 </div>
 
-                {/* Rating */}
-                {accommodation.rating && (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '20px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: '#FFD700', fontSize: isSmallMobile ? '16px' : '18px' }}>⭐</span>
-                      <span style={{ 
-                        fontSize: isSmallMobile ? '16px' : '18px', 
-                        fontWeight: '600', 
-                        color: '#333' 
-                      }}>
-                        {accommodation.rating}
-                      </span>
-                    </div>
-                    {accommodation.reviews && (
-                      <span style={{ fontSize: isSmallMobile ? '13px' : '14px', color: '#666' }}>
-                        ({accommodation.reviews} ulasan)
-                      </span>
-                    )}
-                  </div>
-                )}
+                {/* Rating Summary - Real-time data */}
+                <ProductRatingSummary 
+                  productId={id} 
+                  windowWidth={windowWidth}
+                  refreshTrigger={refreshTrigger}
+                />
 
                 {/* Description */}
                 {accommodation.description && (
@@ -621,6 +606,20 @@ const AccommodationDetail = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Rating Section */}
+          <div style={{
+            background: 'white',
+            borderRadius: isSmallMobile ? '12px' : '16px',
+            overflow: 'hidden',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+            marginTop: isSmallMobile ? '16px' : '24px'
+          }}>
+            <RatingComponent 
+              productId={id}
+              productName={accommodation?.name || "Akomodasi"}
+            />
           </div>
         </div>
       </div>

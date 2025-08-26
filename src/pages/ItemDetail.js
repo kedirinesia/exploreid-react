@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { useRating } from '../context/RatingContext';
+import RatingComponent from '../components/RatingComponent';
+import ProductRatingSummary from '../components/ProductRatingSummary';
 
 const DetailPage = styled.div`
   min-height: 100vh;
@@ -213,8 +216,17 @@ const LoadingSpinner = styled.div`
 
 const ItemDetail = () => {
   const { id } = useParams();
+  const { refreshTrigger } = useRating();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // Mock data untuk detail item
@@ -271,6 +283,8 @@ const ItemDetail = () => {
       setLoading(false);
     }, 1000);
   }, [id]);
+
+
 
   if (loading) {
     return (
@@ -351,6 +365,16 @@ const ItemDetail = () => {
                 </HighlightsList>
               </InfoCard>
 
+              {/* Rating Summary */}
+              <InfoCard>
+                <h3>⭐ Rating & Ulasan</h3>
+                <ProductRatingSummary 
+                  productId={id} 
+                  windowWidth={windowWidth}
+                  refreshTrigger={refreshTrigger}
+                />
+              </InfoCard>
+
               <CTASection>
                 <h3>Siap Berpetualang?</h3>
                 <p>
@@ -363,6 +387,21 @@ const ItemDetail = () => {
               </CTASection>
             </Sidebar>
           </ContentGrid>
+
+          {/* Rating Section */}
+          <div style={{
+            background: 'white',
+            borderRadius: '15px',
+            boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
+            marginTop: '3rem',
+            overflow: 'hidden'
+          }}>
+            {/* Rating Component */}
+            <RatingComponent 
+              productId={id}
+              productName={item?.name || "Destinasi"}
+            />
+          </div>
         </Container>
       </ContentSection>
     </DetailPage>
