@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { RATING_URLS } from '../config/apiConfig';
+import { PROXY_URL, EXTERNAL_PROXIES, parseProxyResponse } from '../config/proxyConfig';
 
 class RatingService {
   constructor() {
@@ -38,28 +39,13 @@ class RatingService {
       }
     }
     
-    // Use CORS proxy for development to bypass CORS issues
-    let targetUrl = url;
-    let useProxy = false;
-    
-    // Always use proxy in development, or if direct call fails
-    const localProxy = 'http://localhost:3001/proxy/';
-    const externalProxies = [
-      'https://api.allorigins.win/get?url=',
-      'https://cors.bridged.cc/',
-      'https://thingproxy.freeboard.io/fetch/',
-      'https://corsproxy.io/?'
-    ];
-    
-    // Try local proxy first if available
-    if (process.env.NODE_ENV === 'development') {
-      targetUrl = `${localProxy}${url}`;
-      useProxy = true;
-    }
+    // Use CORS proxy untuk mengatasi masalah CORS
+    let targetUrl = `${PROXY_URL}${url}`;
+    let useProxy = true;
     
     // Create promise for pending request tracking
     const cacheKey = this.getCacheKey(url, data);
-    const requestPromise = this.executeRequest(targetUrl, data, method, useProxy, externalProxies, url);
+    const requestPromise = this.executeRequest(targetUrl, data, method, useProxy, EXTERNAL_PROXIES, url);
     
     // Track pending request for GET requests
     if (method === 'GET') {
@@ -101,7 +87,10 @@ class RatingService {
             return status >= 200 && status < 500;
           }
         });
-        return response;
+        
+        // Parse proxy response
+        const parsedData = parseProxyResponse(response);
+        return { ...response, data: parsedData };
       } else {
         console.log('🔗 Making GET request to rating API...');
         const response = await axios.get(targetUrl, {
@@ -110,7 +99,10 @@ class RatingService {
             return status >= 200 && status < 500;
           }
         });
-        return response;
+        
+        // Parse proxy response
+        const parsedData = parseProxyResponse(response);
+        return { ...response, data: parsedData };
       }
     } catch (error) {
       console.error('Rating API Request error:', error);
@@ -131,35 +123,45 @@ class RatingService {
   async tryExternalProxies(originalUrl, data, method, externalProxies) {
     for (const proxy of externalProxies) {
       try {
-        const proxyUrl = `${proxy}${encodeURIComponent(originalUrl)}`;
+        let proxyUrl;
+        
+        // Handle different proxy URL formats
+        if (proxy.includes('allorigins.win')) {
+          proxyUrl = `${proxy}${encodeURIComponent(originalUrl)}`;
+        } else if (proxy.includes('cors.bridged.cc')) {
+          proxyUrl = `${proxy}${originalUrl}`;
+        } else {
+          proxyUrl = `${proxy}${encodeURIComponent(originalUrl)}`;
+        }
+        
         console.log(`🔄 Trying proxy: ${proxy}`);
         
         if (method === 'POST') {
           const response = await axios.post(proxyUrl, data, {
             headers: {
               'Content-Type': 'application/json',
-              'Accept': 'application/json'
+              'Accept': 'application/json',
+              'Origin': 'https://exploreid-react.vercel.app',
+              'X-Requested-With': 'XMLHttpRequest'
             },
             timeout: 15000
           });
           
-          // Handle different proxy response formats
-          if (response.data.contents) {
-            // allorigins format
-            response.data = JSON.parse(response.data.contents);
-          }
-          return response;
+          // Parse proxy response
+          const parsedData = parseProxyResponse(response);
+          return { ...response, data: parsedData };
         } else {
           const response = await axios.get(proxyUrl, {
+            headers: {
+              'Origin': 'https://exploreid-react.vercel.app',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
             timeout: 15000
           });
           
-          // Handle different proxy response formats
-          if (response.data.contents) {
-            // allorigins format
-            response.data = JSON.parse(response.data.contents);
-          }
-          return response;
+          // Parse proxy response
+          const parsedData = parseProxyResponse(response);
+          return { ...response, data: parsedData };
         }
       } catch (proxyError) {
         console.log(`❌ Proxy ${proxy} failed:`, proxyError.message);

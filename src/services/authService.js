@@ -17,7 +17,9 @@ class AuthService {
         const response = await axios.post(targetUrl, data, {
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Origin': 'https://exploreid-react.vercel.app',
+            'X-Requested-With': 'XMLHttpRequest'
           },
           timeout: 15000,
           validateStatus: function (status) {
@@ -31,6 +33,10 @@ class AuthService {
       } else {
         console.log('🔗 Making GET request to real API...');
         const response = await axios.get(targetUrl, {
+          headers: {
+            'Origin': 'https://exploreid-react.vercel.app',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
           timeout: 15000,
           validateStatus: function (status) {
             return status >= 200 && status < 500;
@@ -169,9 +175,12 @@ class AuthService {
   // Register user
   async register(username, email, password) {
     try {
-      // Use GET request with query parameters since POST doesn't work well with proxies
-      const registerUrl = `${AUTH_URLS.USER_REGISTER}?action=register&username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
-      const response = await this.makeGoogleScriptRequest(registerUrl, null, 'GET');
+      const response = await this.makeGoogleScriptRequest(AUTH_URLS.USER_REGISTER, {
+        action: 'register',
+        username: username,
+        email: email,
+        password: password
+      }, 'POST');
 
       if (response.data && response.data.status === 'success') {
         return response.data;
@@ -314,13 +323,24 @@ class AuthService {
     
     for (let i = 0; i < EXTERNAL_PROXIES.length; i++) {
       try {
-        const proxyUrl = `${EXTERNAL_PROXIES[i]}${url}`;
+        let proxyUrl;
+        
+        // Handle different proxy URL formats
+        if (EXTERNAL_PROXIES[i].includes('allorigins.win')) {
+          proxyUrl = `${EXTERNAL_PROXIES[i]}${encodeURIComponent(url)}`;
+        } else if (EXTERNAL_PROXIES[i].includes('cors.bridged.cc')) {
+          proxyUrl = `${EXTERNAL_PROXIES[i]}${url}`;
+        } else {
+          proxyUrl = `${EXTERNAL_PROXIES[i]}${encodeURIComponent(url)}`;
+        }
         
         if (method === 'POST') {
           const response = await axios.post(proxyUrl, data, {
             headers: {
               'Content-Type': 'application/json',
-              'Accept': 'application/json'
+              'Accept': 'application/json',
+              'Origin': 'https://exploreid-react.vercel.app',
+              'X-Requested-With': 'XMLHttpRequest'
             },
             timeout: 10000,
             validateStatus: function (status) {
@@ -333,6 +353,10 @@ class AuthService {
           return { ...response, data: parsedData };
         } else {
           const response = await axios.get(proxyUrl, {
+            headers: {
+              'Origin': 'https://exploreid-react.vercel.app',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
             timeout: 10000,
             validateStatus: function (status) {
               return status >= 200 && status < 500;
