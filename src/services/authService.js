@@ -1,29 +1,15 @@
 import axios from 'axios';
 import { AUTH_URLS, USER_URLS } from '../config/apiConfig';
+import { PROXY_URL, EXTERNAL_PROXIES, createProxyRequest, parseProxyResponse } from '../config/proxyConfig';
 
 class AuthService {
   // Helper method to make requests to Google Apps Script
   async makeGoogleScriptRequest(url, data = null, method = 'GET') {
     console.log(`🔗 API Request: ${method} ${url}`, data);
     
-    // Use CORS proxy for development to bypass CORS issues
-    let targetUrl = url;
-    let useProxy = false;
-    
-            if (process.env.NODE_ENV === 'development') {
-          // Use local CORS proxy first, then external proxies as fallback
-          const localProxy = 'http://localhost:3001/proxy/';
-          const externalProxies = [
-            'https://api.allorigins.win/get?url=',
-            'https://cors.bridged.cc',
-            'https://thingproxy.freeboard.io/fetch/',
-            'https://corsproxy.io/?'
-          ];
-          
-          // Try local proxy first
-          targetUrl = `${localProxy}${url}`;
-          useProxy = true;
-        }
+    // Use CORS proxy untuk mengatasi masalah CORS
+    let targetUrl = `${PROXY_URL}${url}`;
+    let useProxy = true;
     
     try {
       if (method === 'POST') {
@@ -52,8 +38,8 @@ class AuthService {
     } catch (error) {
       console.error('Request error:', error);
       
-      // If CORS proxy fails in development, try next proxy
-      if (useProxy && process.env.NODE_ENV === 'development') {
+      // If CORS proxy fails, try next proxy
+      if (useProxy) {
         console.log('🔄 CORS proxy failed, trying next proxy...');
         return await this.tryNextProxy(url, data, method);
       }
@@ -321,17 +307,11 @@ class AuthService {
 
   // Try next available CORS proxy
   async tryNextProxy(url, data, method) {
-    // Start with external proxies since local proxy already failed
-    const externalProxies = [
-      'https://api.allorigins.win/get?url=',
-      'https://cors.bridged.cc',
-      'https://thingproxy.freeboard.io/fetch/',
-      'https://corsproxy.io/?'
-    ];
+    // Start with external proxies since main proxy already failed
     
-    for (let i = 0; i < externalProxies.length; i++) {
+    for (let i = 0; i < EXTERNAL_PROXIES.length; i++) {
       try {
-        const proxyUrl = `${externalProxies[i]}${url}`;
+        const proxyUrl = `${EXTERNAL_PROXIES[i]}${url}`;
         
         if (method === 'POST') {
           const response = await axios.post(proxyUrl, data, {

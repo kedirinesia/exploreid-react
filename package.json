@@ -8,6 +8,7 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.11.0",
+    "concurrently": "^8.2.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.8.1",
@@ -19,7 +20,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "test-proxy": "node test-proxy.js",
+    "dev": "concurrently \"cd cors-proxy && npm start\" \"npm start\"",
+    "setup": "npm install && cd cors-proxy && npm install"
   },
   "eslintConfig": {
     "extends": [

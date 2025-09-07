@@ -24,30 +24,42 @@ npm install
 
 ### 3. Running the Application
 
-#### Option A: Running dengan CORS Proxy (Recommended)
-
-**Step 1: Start CORS Proxy Server**
+#### 🚀 Quick Setup (Recommended)
 ```bash
-# Buka terminal baru dan jalankan:
-cd cors-proxy
+# Install semua dependencies dan jalankan aplikasi
+npm run setup
+npm run dev
+```
+
+#### 📋 Manual Setup
+
+**Step 1: Install Dependencies**
+```bash
+# Install main app dependencies
 npm install
-npm start
+
+# Install CORS proxy dependencies
+cd cors-proxy && npm install && cd ..
 ```
 
-Server CORS akan berjalan di `http://localhost:3001`
-
-**Step 2: Start React App**
+**Step 2: Start CORS Proxy Server**
 ```bash
-# Kembali ke root directory dan jalankan:
+# Terminal 1
+cd cors-proxy
 npm start
 ```
+✅ Server berjalan di: `http://localhost:3001`
 
-Aplikasi React akan berjalan di `http://localhost:3000`
-
-#### Option B: Running tanpa CORS Proxy
-
+**Step 3: Start React App**
 ```bash
+# Terminal 2
 npm start
+```
+✅ App berjalan di: `http://localhost:3000`
+
+#### 🧪 Test CORS Proxy
+```bash
+npm run test-proxy
 ```
 
 > **Note**: Jika menggunakan Option B, beberapa fitur API mungkin tidak berfungsi karena CORS restrictions.
@@ -262,6 +274,51 @@ Deploy CORS proxy server ke platform seperti:
 - Railway
 - Render
 - Vercel (serverless)
+
+## 📄 License
+
+## 🚀 Deployment
+
+### Deploy ke Vercel (Recommended)
+
+1. **Connect Repository**
+   - Login ke [Vercel](https://vercel.com)
+   - Import repository dari GitHub
+   - Deploy otomatis
+
+2. **CORS Protection**
+   - ✅ Otomatis terkonfigurasi
+   - Development: Local proxy (`localhost:3001`)
+   - Production: Vercel serverless function (`/api/proxy`)
+
+3. **Test Deployment**
+   ```bash
+   # Test proxy endpoint
+   curl "https://your-app.vercel.app/api/proxy?targetUrl=https://httpbin.org/get"
+   ```
+
+📚 **Full Deployment Guide**: [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+## 🔧 Troubleshooting
+
+### ❌ CORS Error di Production?
+- Check proxy endpoint: `https://your-app.vercel.app/api/proxy?targetUrl=https://httpbin.org/get`
+- Verify serverless function berjalan
+
+### ❌ API Calls Gagal?
+- Check browser console (F12)
+- Verify network requests
+- Test proxy endpoint manually
+
+### ❌ Development Issues?
+```bash
+# Test semua proxy
+npm run test-proxy
+
+# Restart dengan clean install
+rm -rf node_modules package-lock.json
+npm install
+```
 
 ## 📄 License
 
