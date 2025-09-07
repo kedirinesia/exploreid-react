@@ -1,17 +1,16 @@
 // Proxy Configuration untuk Development dan Production
 
 const getProxyUrl = () => {
-  // Gunakan external proxy yang reliable untuk semua environment
-  // karena Vercel deployment protection memblokir akses
-  return 'https://api.allorigins.win/get?url=';
+  // Menggunakan cors.bridged.cc sebagai proxy utama karena lebih reliable untuk POST requests
+  return 'https://cors.bridged.cc/';
 };
 
 // External CORS proxies sebagai fallback
 export const EXTERNAL_PROXIES = [
-  'https://api.allorigins.win/get?url=',
-  'https://cors-anywhere.herokuapp.com/',
   'https://cors.bridged.cc/',
-  'https://thingproxy.freeboard.io/fetch/'
+  'https://thingproxy.freeboard.io/fetch/',
+  'https://api.allorigins.win/get?url=',
+  'https://cors-anywhere.herokuapp.com/'
 ];
 
 // Main proxy URL
@@ -51,6 +50,7 @@ export const parseProxyResponse = (response) => {
     data = data.data;
   }
   
+  // cors.bridged.cc returns data directly, no need to parse further
   return data;
 };
 

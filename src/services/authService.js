@@ -24,7 +24,10 @@ class AuthService {
             return status >= 200 && status < 500;
           }
         });
-        return response;
+        
+        // Parse proxy response
+        const parsedData = parseProxyResponse(response);
+        return { ...response, data: parsedData };
       } else {
         console.log('🔗 Making GET request to real API...');
         const response = await axios.get(targetUrl, {
@@ -33,7 +36,10 @@ class AuthService {
             return status >= 200 && status < 500;
           }
         });
-        return response;
+        
+        // Parse proxy response
+        const parsedData = parseProxyResponse(response);
+        return { ...response, data: parsedData };
       }
     } catch (error) {
       console.error('Request error:', error);
@@ -163,12 +169,9 @@ class AuthService {
   // Register user
   async register(username, email, password) {
     try {
-      const response = await this.makeGoogleScriptRequest(AUTH_URLS.USER_REGISTER, {
-        action: 'register',
-        username: username,
-        email: email,
-        password: password
-      }, 'POST');
+      // Use GET request with query parameters since POST doesn't work well with proxies
+      const registerUrl = `${AUTH_URLS.USER_REGISTER}?action=register&username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+      const response = await this.makeGoogleScriptRequest(registerUrl, null, 'GET');
 
       if (response.data && response.data.status === 'success') {
         return response.data;
@@ -324,7 +327,10 @@ class AuthService {
               return status >= 200 && status < 500;
             }
           });
-          return response;
+          
+          // Parse proxy response
+          const parsedData = parseProxyResponse(response);
+          return { ...response, data: parsedData };
         } else {
           const response = await axios.get(proxyUrl, {
             timeout: 10000,
@@ -332,7 +338,10 @@ class AuthService {
               return status >= 200 && status < 500;
             }
           });
-          return response;
+          
+          // Parse proxy response
+          const parsedData = parseProxyResponse(response);
+          return { ...response, data: parsedData };
         }
       } catch (proxyError) {
         continue; // Try next proxy
