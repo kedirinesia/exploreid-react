@@ -1,26 +1,17 @@
 // Proxy Configuration untuk Development dan Production
 
 const getProxyUrl = () => {
-  // Production: Gunakan Vercel serverless function
-  if (process.env.NODE_ENV === 'production') {
-    // Jika di-deploy di Vercel, gunakan API route
-    if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
-      return `${window.location.origin}/api/proxy?targetUrl=`;
-    }
-    // Fallback untuk production lainnya
-    return 'https://api.allorigins.win/get?url=';
-  }
-  
-  // Development: Gunakan local CORS proxy
-  return 'http://localhost:3001/proxy/';
+  // Gunakan external proxy yang reliable untuk semua environment
+  // karena Vercel deployment protection memblokir akses
+  return 'https://api.allorigins.win/get?url=';
 };
 
 // External CORS proxies sebagai fallback
 export const EXTERNAL_PROXIES = [
   'https://api.allorigins.win/get?url=',
+  'https://cors-anywhere.herokuapp.com/',
   'https://cors.bridged.cc/',
-  'https://thingproxy.freeboard.io/fetch/',
-  'https://corsproxy.io/?'
+  'https://thingproxy.freeboard.io/fetch/'
 ];
 
 // Main proxy URL

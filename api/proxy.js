@@ -21,33 +21,28 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`🔄 Proxying ${req.method} request to: ${targetUrl}`);
+    // Decode the target URL
+    const decodedUrl = decodeURIComponent(targetUrl);
+    console.log(`🔄 Proxying ${req.method} request to: ${decodedUrl}`);
     
-    // Prepare request config
-    const config = {
-      method: req.method,
-      url: targetUrl,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': 'Vercel-CORS-Proxy/1.0'
-      },
-      timeout: 30000, // 30 seconds timeout
-      validateStatus: function (status) {
-        return status >= 200 && status < 500;
-      }
+    // Prepare headers
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'User-Agent': 'Vercel-CORS-Proxy/1.0'
     };
     
-    // Add request body for POST/PUT/PATCH requests
+    // Prepare request body for POST/PUT/PATCH requests
+    let body;
     if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.body) {
-      config.data = req.body;
+      body = JSON.stringify(req.body);
     }
     
     // Make the request using fetch (built-in in Vercel)
-    const response = await fetch(targetUrl, {
+    const response = await fetch(decodedUrl, {
       method: req.method,
-      headers: config.headers,
-      body: req.body ? JSON.stringify(req.body) : undefined,
+      headers: headers,
+      body: body,
       signal: AbortSignal.timeout(30000)
     });
     
