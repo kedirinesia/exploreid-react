@@ -179,6 +179,12 @@ class RatingService {
     this.pendingRequests.clear();
   }
 
+  // Force clear cache and reload
+  forceReload() {
+    console.log('🔄 Force reloading ratings...');
+    this.clearRatingCache();
+  }
+
   // Force refresh ratings (bypass cache)
   async forceRefreshRatings() {
     console.log('🔄 Force refreshing ratings...');
@@ -214,6 +220,14 @@ class RatingService {
           data: response.data.data,
           message: response.data.message
         };
+      } else if (response.data && response.data.id) {
+        // Direct object format (what we might be getting)
+        this.clearRatingCache();
+        return {
+          success: true,
+          data: response.data,
+          message: 'Rating submitted successfully'
+        };
       } else {
         console.error('🔍 Invalid submit response structure:', response.data);
         throw new Error(response.data?.message || 'Failed to submit rating');
@@ -237,11 +251,20 @@ class RatingService {
       console.log('🔍 Raw response:', response);
       console.log('🔍 Response data:', response.data);
 
+      // Handle different response formats
       if (response.data && response.data.status === 'success') {
+        // Standard format with status and data
         return {
           success: true,
           data: response.data.data,
           message: response.data.message
+        };
+      } else if (Array.isArray(response.data)) {
+        // Direct array format (what we're actually getting)
+        return {
+          success: true,
+          data: response.data,
+          message: 'Ratings fetched successfully'
         };
       } else {
         console.error('🔍 Invalid response structure:', response.data);
