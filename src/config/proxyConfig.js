@@ -36,10 +36,13 @@ export const createProxyRequest = (targetUrl, data = null, method = 'GET') => {
 export const parseProxyResponse = (response) => {
   let data = response.data;
   
+  console.log('🔍 Parsing proxy response:', data);
+  
   // Handle allorigins format
   if (data && data.contents) {
     try {
       data = JSON.parse(data.contents);
+      console.log('🔍 Parsed allorigins contents:', data);
     } catch (e) {
       console.error('Failed to parse allorigins contents:', e);
     }
@@ -48,9 +51,11 @@ export const parseProxyResponse = (response) => {
   // Handle some proxies that wrap in data
   if (data && data.data) {
     data = data.data;
+    console.log('🔍 Unwrapped data:', data);
   }
   
   // cors.bridged.cc returns data directly, no need to parse further
+  console.log('🔍 Final parsed data:', data);
   return data;
 };
 

@@ -203,6 +203,9 @@ class RatingService {
         'POST'
       );
 
+      console.log('🔍 Submit rating response:', response);
+      console.log('🔍 Response data:', response.data);
+
       if (response.data && response.data.status === 'success') {
         // Clear cache after successful submission
         this.clearRatingCache();
@@ -212,6 +215,7 @@ class RatingService {
           message: response.data.message
         };
       } else {
+        console.error('🔍 Invalid submit response structure:', response.data);
         throw new Error(response.data?.message || 'Failed to submit rating');
       }
     } catch (error) {
@@ -223,11 +227,15 @@ class RatingService {
   // Get all ratings
   async getRatings() {
     try {
+      console.log('🔍 Fetching all ratings...');
       const response = await this.makeGoogleScriptRequest(
         RATING_URLS.GET_RATINGS,
         null,
         'GET'
       );
+
+      console.log('🔍 Raw response:', response);
+      console.log('🔍 Response data:', response.data);
 
       if (response.data && response.data.status === 'success') {
         return {
@@ -236,6 +244,7 @@ class RatingService {
           message: response.data.message
         };
       } else {
+        console.error('🔍 Invalid response structure:', response.data);
         throw new Error(response.data?.message || 'Failed to fetch ratings');
       }
     } catch (error) {
