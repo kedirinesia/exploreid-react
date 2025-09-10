@@ -5,6 +5,7 @@ import Header from './components/header';
 import Home from './pages/Home';
 import SouvenirsPage from './pages/SouvenirsPage';
 import FoodItemsPage from './pages/FoodItemsPage';
+import LocalGuidesPage from './pages/LocalGuidesPage';
 import ProductDetail from './pages/ProductDetail';
 import AccommodationDetail from './pages/AccommodationDetail';
 import AccommodationList from './pages/AccommodationList';
@@ -128,7 +129,7 @@ function App() {
               <Route path="/accommodation/:id" element={<AccommodationDetail />} />
               <Route path="/accommodation" element={<AccommodationList />} />
               <Route path="/destinations" element={<div style={{padding: '2rem', textAlign: 'center'}}><h2>Halaman Destinasi - Coming Soon!</h2></div>} />
-              <Route path="/culture" element={<div style={{padding: '2rem', textAlign: 'center'}}><h2>Halaman Budaya - Coming Soon!</h2></div>} />
+              <Route path="/local-guides" element={<LocalGuidesPage />} />
               <Route path="/explore" element={<div style={{padding: '2rem', textAlign: 'center'}}><h2>Halaman Explore - Coming Soon!</h2></div>} />
               <Route path="/saved" element={<div style={{padding: '2rem', textAlign: 'center'}}><h2>Halaman Saved - Coming Soon!</h2></div>} />
               

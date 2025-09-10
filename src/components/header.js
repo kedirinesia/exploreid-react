@@ -218,7 +218,7 @@ const Header = () => {
     { href: '/accommodation', label: 'Hotel', icon: '🏨' },
     { href: '/souvenirs', label: 'Souvenirs', icon: '🎁' },
     { href: '/culinary', label: 'Kuliner', icon: '🍜' },
-    { href: '/culture', label: 'Culture', icon: '🎭' }
+    { href: '/local-guides', label: 'Local Guides', icon: '🗺️' }
   ];
 
   return (

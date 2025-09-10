@@ -116,7 +116,7 @@ const Footer = () => {
           <h3>Eksplorasi</h3>
           <ul>
             <li><a href="/destinations">Destinasi Wisata</a></li>
-            <li><a href="/culture">Budaya & Tradisi</a></li>
+            <li><a href="/local-guides">Local Guides</a></li>
             <li><a href="/food">Kuliner Nusantara</a></li>
             <li><a href="/events">Event & Festival</a></li>
             <li><a href="/adventure">Petualangan</a></li>

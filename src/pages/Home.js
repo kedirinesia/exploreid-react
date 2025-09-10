@@ -128,7 +128,7 @@ const Home = () => {
               { icon: '🏨', label: 'Hotel', color: '#FF6B6B', path: '/accommodation' },
               { icon: '🎁', label: 'Souvenirs', color: '#4ECDC4', path: '/souvenirs' },
               { icon: '🍜', label: 'Kuliner', color: '#FFA726', path: '/culinary' },
-              { icon: '🎭', label: 'Culture', color: '#FF5722', path: '/culture' }
+              { icon: '🗺️', label: 'Local Guides', color: '#FF5722', path: '/local-guides' }
             ].map((item, index) => (
               <div 
                 key={index} 
