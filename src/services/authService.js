@@ -17,9 +17,7 @@ class AuthService {
         const response = await axios.post(targetUrl, data, {
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Origin': 'https://exploreid-react.vercel.app',
-            'X-Requested-With': 'XMLHttpRequest'
+            'Accept': 'application/json'
           },
           timeout: 15000,
           validateStatus: function (status) {
@@ -34,8 +32,7 @@ class AuthService {
         console.log('🔗 Making GET request to real API...');
         const response = await axios.get(targetUrl, {
           headers: {
-            'Origin': 'https://exploreid-react.vercel.app',
-            'X-Requested-With': 'XMLHttpRequest'
+            'Accept': 'application/json'
           },
           timeout: 15000,
           validateStatus: function (status) {
@@ -338,9 +335,7 @@ class AuthService {
           const response = await axios.post(proxyUrl, data, {
             headers: {
               'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Origin': 'https://exploreid-react.vercel.app',
-              'X-Requested-With': 'XMLHttpRequest'
+              'Accept': 'application/json'
             },
             timeout: 10000,
             validateStatus: function (status) {
@@ -354,8 +349,7 @@ class AuthService {
         } else {
           const response = await axios.get(proxyUrl, {
             headers: {
-              'Origin': 'https://exploreid-react.vercel.app',
-              'X-Requested-With': 'XMLHttpRequest'
+              'Accept': 'application/json'
             },
             timeout: 10000,
             validateStatus: function (status) {

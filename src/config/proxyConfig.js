@@ -1,7 +1,17 @@
 // Proxy Configuration untuk Development dan Production
 
 const getProxyUrl = () => {
-  // Menggunakan cors.bridged.cc sebagai proxy utama karena lebih reliable untuk POST requests
+  // Di production (Vercel), gunakan Vercel serverless function
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    return '/api/proxy?targetUrl=';
+  }
+  
+  // Di development, gunakan local proxy atau external proxy
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:3001/proxy?targetUrl=';
+  }
+  
+  // Fallback ke external proxy
   return 'https://cors.bridged.cc/';
 };
 
@@ -18,18 +28,35 @@ export const PROXY_URL = getProxyUrl();
 
 // Helper function untuk membuat request dengan proxy
 export const createProxyRequest = (targetUrl, data = null, method = 'GET') => {
-  const proxyUrl = `${PROXY_URL}${encodeURIComponent(targetUrl)}`;
+  const isVercelProxy = PROXY_URL.includes('/api/proxy');
   
-  return {
-    url: proxyUrl,
-    method: method,
-    data: data,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    timeout: 30000
-  };
+  if (isVercelProxy) {
+    // Untuk Vercel proxy, gunakan query parameter
+    const proxyUrl = `${PROXY_URL}${encodeURIComponent(targetUrl)}`;
+    return {
+      url: proxyUrl,
+      method: method,
+      data: data,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      timeout: 30000
+    };
+  } else {
+    // Untuk external proxy, append URL langsung
+    const proxyUrl = `${PROXY_URL}${encodeURIComponent(targetUrl)}`;
+    return {
+      url: proxyUrl,
+      method: method,
+      data: data,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      timeout: 30000
+    };
+  }
 };
 
 // Helper function untuk parse response dari berbagai proxy
@@ -37,6 +64,12 @@ export const parseProxyResponse = (response) => {
   let data = response.data;
   
   console.log('🔍 Parsing proxy response:', data);
+  
+  // Vercel proxy returns data directly
+  if (PROXY_URL.includes('/api/proxy')) {
+    console.log('🔍 Vercel proxy response:', data);
+    return data;
+  }
   
   // Handle allorigins format
   if (data && data.contents) {

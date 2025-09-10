@@ -140,9 +140,7 @@ class RatingService {
           const response = await axios.post(proxyUrl, data, {
             headers: {
               'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Origin': 'https://exploreid-react.vercel.app',
-              'X-Requested-With': 'XMLHttpRequest'
+              'Accept': 'application/json'
             },
             timeout: 15000
           });
@@ -153,8 +151,7 @@ class RatingService {
         } else {
           const response = await axios.get(proxyUrl, {
             headers: {
-              'Origin': 'https://exploreid-react.vercel.app',
-              'X-Requested-With': 'XMLHttpRequest'
+              'Accept': 'application/json'
             },
             timeout: 15000
           });
